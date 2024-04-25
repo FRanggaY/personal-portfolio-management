@@ -38,9 +38,9 @@ export function NavigationBar() {
                 {
                     components.map((row) => {
                         return <NavigationMenuItem key={row.id}>
-                            <Link href={`/${params.locale}/dashboard`} legacyBehavior passHref>
+                            <Link href={`/${params.locale}/${row.url}`} legacyBehavior passHref>
                                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                                    Dashboard
+                                    {row.title}
                                 </NavigationMenuLink>
                             </Link>
                         </NavigationMenuItem>
