@@ -8,17 +8,23 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-export function UserNav() {
-    const session  = {
-        user: {
-            name: 'test',
-            image: 'test.jpg',
-            email: 'test',
-        }
+import { NavbarTitle } from "@/types";
+
+export function UserNav({ title }: { title: NavbarTitle}) {
+  
+  const session = {
+    user: {
+      name: 'test',
+      image: 'test.jpg',
+      email: 'test',
     }
+  }
+
+  const signOut = () => {
+    console.log('log out')
+  }
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -46,24 +52,16 @@ export function UserNav() {
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem>
-            Profile
-            <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
+            {title.profile}
           </DropdownMenuItem>
           <DropdownMenuItem>
-            Billing
-            <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
+            {title.settings}
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            Settings
-            <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
-          </DropdownMenuItem>
-          <DropdownMenuItem>New Team</DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        {/* <DropdownMenuItem onClick={() => signOut()}>
-          Log out
-          <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
-        </DropdownMenuItem> */}
+        <DropdownMenuItem onClick={() => signOut()}>
+          {title.logout}
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

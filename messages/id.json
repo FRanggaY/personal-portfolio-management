@@ -1,6 +1,34 @@
 {
-    "Index": {
-      "title": "Hai world!",
-      "overview": "Statistik"
+  "Navbar": {
+    "profile": {
+      "title": "Profil"
+    },
+    "settings": {
+      "title": "Pengaturan"
+    },
+    "logout": {
+      "title": "Keluar"
+    }
+  },
+  "Landing": {
+    "title": "Halaman Awal"
+  },
+  "PanelDashboard": {
+    "title": "Dashboard"
+  },
+  "PanelUser": {
+    "title": "User",
+    "create": {
+      "title": "Create User",
+      "button": "Create"
+    },
+    "edit": {
+      "title": "Edit User",
+      "button": "Update"
+    },
+    "delete": {
+      "title": "Delete User",
+      "button": "Delete"
     }
   }
+}

@@ -1,6 +1,34 @@
 {
-    "Index": {
-      "title": "Hello world!",
-      "overview": "Overview"
+  "Navbar": {
+    "profile": {
+      "title": "Profile"
+    },
+    "settings": {
+      "title": "Settings"
+    },
+    "logout": {
+      "title": "Log out"
+    }
+  },
+  "Landing": {
+    "title": "Landing Page"
+  },
+  "PanelDashboard": {
+    "title": "Dashboard"
+  },
+  "PanelUser": {
+    "title": "User",
+    "create": {
+      "title": "Buat User",
+      "button": "Buat"
+    },
+    "edit": {
+      "title": "Update User",
+      "button": "Update"
+    },
+    "delete": {
+      "title": "Hapus User",
+      "button": "Hapus"
     }
   }
+}

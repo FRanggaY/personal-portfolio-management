@@ -30,3 +30,9 @@ export interface FooterItem {
 export type MainNavItem = NavItemWithOptionalChildren;
 
 export type SidebarNavItem = NavItemWithChildren;
+
+export interface NavbarTitle {
+  profile: string;
+  settings: string;
+  logout: string;
+}
