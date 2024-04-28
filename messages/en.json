@@ -10,6 +10,9 @@
       "title": "Log out"
     }
   },
+  "Login": {
+    "title": "Login"
+  },
   "Landing": {
     "title": "Landing Page"
   },
