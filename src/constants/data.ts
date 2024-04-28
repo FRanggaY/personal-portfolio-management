@@ -1,4 +1,3 @@
-import { Icons } from "@/components/icons";
 import { NavItem } from "@/types";
 
 export const navItems: NavItem[] = [
@@ -13,5 +12,11 @@ export const navItems: NavItem[] = [
     href: "/panel/user",
     icon: "user",
     label: "user",
+  },
+  {
+    title: "Skill",
+    href: "/panel/skill",
+    icon: "award",
+    label: "skill",
   },
 ];

@@ -19,6 +19,9 @@
   "PanelDashboard": {
     "title": "Dashboard"
   },
+  "PanelSkill": {
+    "title": "Skill"
+  },
   "PanelUser": {
     "title": "User",
     "create": {

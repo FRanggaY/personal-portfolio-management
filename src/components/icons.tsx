@@ -28,6 +28,7 @@ import {
     User,
     User2Icon,
     UserX2Icon,
+    Award,
     X,
   } from "lucide-react";
   
@@ -54,6 +55,7 @@ import {
     add: Plus,
     warning: AlertTriangle,
     user: User,
+    award: Award,
     arrowRight: ArrowRight,
     help: HelpCircle,
     pizza: Pizza,
