@@ -1,4 +1,5 @@
 "use client";
+import { removeAccessToken } from "@/actions/auth/auth-action";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,31 +11,34 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { toast } from "@/components/ui/use-toast"
 import { NavbarTitle } from "@/types";
+import { AuthProfile } from "@/types/auth";
+import { useParams, useRouter } from "next/navigation";
 
-export function UserNav({ title }: { title: NavbarTitle}) {
-  
-  const session = {
-    user: {
-      name: 'test',
-      image: 'test.jpg',
-      email: 'test',
-    }
+export function UserNav({ title, profile }: { title: NavbarTitle, profile: AuthProfile }) {
+  const params = useParams<{ locale: string; }>();
+  const router = useRouter();
+
+  const signOut = async () => {
+    await removeAccessToken();
+    router.push(`/${params.locale}/auth/login`);
+    toast({
+      title: "Success:",
+      description: 'logout successfully',
+    })
   }
 
-  const signOut = () => {
-    console.log('log out')
-  }
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
             <AvatarImage
-              src={session.user?.image ?? ""}
-              alt={session.user?.name ?? ""}
+              src={profile.profile.image_url ?? ""}
+              alt={profile.profile.name ?? ""}
             />
-            <AvatarFallback>{session.user?.name?.[0]}</AvatarFallback>
+            <AvatarFallback>{profile.profile.name.substring(0, 2)}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
@@ -42,10 +46,10 @@ export function UserNav({ title }: { title: NavbarTitle}) {
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">
-              {session.user?.name}
+              {profile.profile.name ?? ""}
             </p>
             <p className="text-xs leading-none text-muted-foreground">
-              {session.user?.email}
+              {profile.profile.username ?? ""}
             </p>
           </div>
         </DropdownMenuLabel>

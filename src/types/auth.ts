@@ -17,11 +17,6 @@ export interface AuthProfile {
       code: string,
       name: string
     },
-    position?: {
-      id: number,
-      code: string,
-      name: string
-    },
     image_url: string
   },
   refresh: () => void;

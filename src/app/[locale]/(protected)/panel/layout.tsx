@@ -2,6 +2,7 @@ import Header from "@/components/layout/header";
 import Sidebar from "@/components/layout/sidebar";
 import type { Metadata } from "next";
 import { useTranslations } from "next-intl";
+import { AuthProfileProvider } from '@/context/AuthProfileContext';
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -15,7 +16,7 @@ export default function DashboardLayout({
 }>) {
   const titleNav = useTranslations('Navbar');
   return (
-    <>
+    <AuthProfileProvider>
       <Header 
         title={{
           profile: titleNav('profile.title'),
@@ -27,6 +28,6 @@ export default function DashboardLayout({
         <Sidebar />
         <main className="w-full pt-16">{children}</main>
       </div>
-    </>
+    </AuthProfileProvider>
   );
 }
