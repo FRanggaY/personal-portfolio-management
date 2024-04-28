@@ -19,26 +19,26 @@ import { useEffect, useState } from "react"
 import { EyeIcon, EyeOffIcon } from "lucide-react"
 import { getAccessToken, login } from "@/actions/auth/auth-action"
 import { useParams, useRouter } from "next/navigation"
-import { FormSchema } from "@/schemas/auth"
+import { AuthLoginFormSchema } from "@/schemas/auth"
 
 
 export function AuthLoginForm() {
   const params = useParams<{ locale: string; }>();
   const router = useRouter();
-  const [showPassword, setShowPassword] = useState(true)
-  const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   const urlDashboard = `/${params.locale}/panel/dashboard`;
 
-  const form = useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema),
+  const form = useForm<z.infer<typeof AuthLoginFormSchema>>({
+    resolver: zodResolver(AuthLoginFormSchema),
     defaultValues: {
       username_or_email: "",
       password: "",
     },
   })
 
-  async function onSubmit(data: z.infer<typeof FormSchema>) {
+  async function onSubmit(data: z.infer<typeof AuthLoginFormSchema>) {
     setLoading(true);
    
     const message = await login(data);

@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-export const FormSchema = z.object({
+export const AuthLoginFormSchema = z.object({
   username_or_email: z.string().min(1, {
     message: "Username or Email must be at least 1 characters.",
   }).max(50, {
