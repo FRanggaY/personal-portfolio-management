@@ -93,7 +93,7 @@ export const createSkill = async (token: string, formData: FormData) => {
   }
 };
 
-export const updateSkill = async (token: string, id: number, formData: FormData) => {
+export const updateSkill = async (token: string, id: string, formData: FormData) => {
   try {
     const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/skill/${id}`;
 
@@ -123,7 +123,7 @@ export const updateSkill = async (token: string, id: number, formData: FormData)
   }
 };
 
-export const deleteSkill = async (token: string, id: number) => {
+export const deleteSkill = async (token: string, id: string) => {
   try {
     const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/skill/${id}`;
 

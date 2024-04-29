@@ -1,58 +1,45 @@
 import {
   Card,
-  CardDescription,
+  CardContent,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-
-import {
-  ArrowUpRight,
-} from "lucide-react";
+import Image from "next/image";
+import { EditSkillForm } from "@/components/forms/skill/edit-skill-form";
+import { Skill } from "@/types/skill";
 
 
 export function SkillCard({
-  title,
-  description,
-  updatedAt,
-  websiteUrl,
-  logoUrl,
+  row
 }: Readonly<{
-  title: string,
-  description: string,
-  updatedAt: string,
-  websiteUrl: string,
-  logoUrl: string,
+  row: Skill
 }>) {
   return (
     <Card className="border-zinc-600 hover:border-blue-500">
       <CardHeader>
-        {
-          logoUrl ??  <Avatar>
-          <AvatarImage src={logoUrl} alt={title} />
-          <AvatarFallback>{title.substring(0, 2)}</AvatarFallback>
-        </Avatar>
-        }
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardFooter className="flex justify-between flex-wrap">
-        <div className="text-xs">
-          <p className="text-zinc-400">{updatedAt}</p>
+        <div className="flex gap-3 flex-wrap">
+          {row.logo_url ?
+            < Image
+              src={row.logo_url}
+              alt={row.name.substring(0, 2)}
+            />
+            : null}
+          <div>
+            <CardTitle>{row.name}</CardTitle>
+          </div>
         </div>
-        <a href={websiteUrl} target="_blank">
-          <Button>
-            Show
-            <ArrowUpRight className="ml-3" />
-          </Button>
-        </a>
+      </CardHeader>
+      <CardContent>
+        <div className="text-xs">
+          <p className="text-zinc-400">{row.updated_at}</p>
+        </div>
+      </CardContent>
+      <CardFooter className="flex justify-between flex-wrap">
+        <EditSkillForm 
+          row={row}
+        />
       </CardFooter>
     </Card>
   )

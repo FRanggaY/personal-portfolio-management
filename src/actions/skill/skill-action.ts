@@ -19,7 +19,7 @@ export const addSkill = async (formData: FormData) => {
   }
 }
 
-export const editSkill = async (id: number, formData: FormData) => {
+export const editSkill = async (id: string, formData: FormData) => {
   const accessToken = await getAccessToken();
   if (accessToken) {
     const data = await updateSkill(accessToken.value, id, formData);
