@@ -10,7 +10,7 @@ import { ResponseSkills, Skill } from '@/types/skill';
 
 
 const pageSizeOptions = [3, 5, 10]; // Options for items per page
-const pageSize = 3; // Default number of items per page
+const pageSize = 5; // Default number of items per page
 
 function SkillLayout() {
   const [skills, setSkills] = useState<ResponseSkills | null>(null);
@@ -58,11 +58,7 @@ function SkillLayout() {
           skills?.data?.map((row: Skill) => {
             return <SkillCard
               key={row.id}
-              title={row.name}
-              description={''}
-              updatedAt={row.updated_at}
-              websiteUrl={row.website_url}
-              logoUrl={row.logo_url}
+              row={row}
             />
           })
         }

@@ -9,6 +9,7 @@ import {
 import Image from "next/image";
 import { EditSkillForm } from "@/components/forms/skill/edit-skill-form";
 import { Skill } from "@/types/skill";
+import { DeleteSkillAlert } from "@/components/alert/skill/delete-skill-alert";
 
 
 export function SkillCard({
@@ -39,6 +40,9 @@ export function SkillCard({
       <CardFooter className="flex justify-between flex-wrap">
         <EditSkillForm 
           row={row}
+        />
+        <DeleteSkillAlert 
+          id={row.id}
         />
       </CardFooter>
     </Card>
