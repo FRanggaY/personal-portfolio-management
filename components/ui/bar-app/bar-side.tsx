@@ -7,7 +7,7 @@ import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import { Tooltip } from "@mui/material"
-import BuildIcon from '@mui/icons-material/Build';
+import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 // import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
 // import PersonIcon from '@mui/icons-material/Person';
 // import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
@@ -58,7 +58,7 @@ export default function BarSide({ open, drawerWidth }: any) {
     {
       url: `/${params.locale}/panel/skill`,
       title: t.skill.title,
-      icon: <BuildIcon />
+      icon: <WorkspacePremiumIcon />
     },
   ]
 
