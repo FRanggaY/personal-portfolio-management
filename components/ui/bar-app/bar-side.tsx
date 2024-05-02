@@ -8,10 +8,7 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import { Tooltip } from "@mui/material"
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
-// import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
-// import PersonIcon from '@mui/icons-material/Person';
-// import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
-// import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
+import LocationCityIcon from '@mui/icons-material/LocationCity';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import { usePathname, useParams } from 'next/navigation'
 import { dataLocale, validLocale } from '@/lib/locale';
@@ -59,6 +56,11 @@ export default function BarSide({ open, drawerWidth }: any) {
       url: `/${params.locale}/panel/skill`,
       title: t.skill.title,
       icon: <WorkspacePremiumIcon />
+    },
+    {
+      url: `/${params.locale}/panel/school`,
+      title: t.school.title,
+      icon: <LocationCityIcon />
     },
   ]
 

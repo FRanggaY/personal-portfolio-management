@@ -31,6 +31,9 @@ interface Sidebar {
   skill: {
     title: string;
   };
+  school: {
+    title: string;
+  };
 }
 
 export interface DataLocale {
