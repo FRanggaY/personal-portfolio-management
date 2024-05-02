@@ -16,7 +16,7 @@ import { ModalConfirmation } from '@/components/shared/modal/modal';
 import { toast } from 'sonner';
 import { ResponseGeneralDynamicResource } from '@/types/general';
 import { getAccessToken } from '@/actions/auth/auth-action';
-import { useRouter, useSearchParams, useParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { SortableColumn } from '@/components/shared/table/column';
 import { VisuallyHiddenInput } from '@/components/shared/button/button';
 import { CreateSkillSchema, EditSkillSchema } from '@/schemas/skill';
@@ -43,7 +43,6 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
     show: false,
   });
   const [loading, setLoading] = useState(true);
-  const params = useParams<{ locale: string; }>();
   const router = useRouter();
   const searchParams = useSearchParams();
   const page = searchParams.get('page') ?? 1;
@@ -252,53 +251,9 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
     router.push(newPath);
   };
 
-  if (loading) {
-    // Show skeleton loading while data is being fetched
+  {/* reuse modal for add or edit */ }
+  const ModalAddEdit = () => {
     return (
-      <TableLoading
-        itemsPerPage={itemsPerPage}
-        columsPerPage={6}
-      />
-    );
-  }
-
-  if (!skills || skills?.data?.length === 0) {
-    return <>
-      {
-        resource?.data.includes('create') &&
-        <Button sx={{ mt: 2, mb: 2 }}
-          href={'/' + params.locale + '/manage-skill/create'}
-          variant="contained"
-          color="primary"
-        >
-          Create
-        </Button>
-      }
-      <TableDataNotFound />
-    </>;
-  }
-
-  const { data, meta } = skills;
-
-  return (
-    <>
-      {/* create button */}
-      {
-        resource?.data.includes('create') &&
-        <Button
-          variant="contained"
-          onClick={() => {
-            setImageUrl('');
-            setLogoUrl('');
-            handleOpenAddEdit();
-          }}
-          disabled={loading}
-        >
-          Create
-        </Button>
-      }
-
-      {/* reuse modal for add or edit */}
       <Modal
         open={openAddEdit}
         onClose={handleCloseAddEdit}
@@ -478,6 +433,61 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
           </Grid>
         </Box>
       </Modal>
+    )
+  }
+
+  if (loading) {
+    // Show skeleton loading while data is being fetched
+    return (
+      <TableLoading
+        itemsPerPage={itemsPerPage}
+        columsPerPage={6}
+      />
+    );
+  }
+
+  if (!skills || skills?.data?.length === 0) {
+    return <>
+      {
+        resource?.data.includes('create') &&
+        <Button
+          variant="contained"
+          onClick={() => {
+            setImageUrl('');
+            setLogoUrl('');
+            handleOpenAddEdit();
+          }}
+          disabled={loading}
+        >
+          Create
+        </Button>
+      }
+      <ModalAddEdit />
+      <TableDataNotFound />
+    </>;
+  }
+
+  const { data, meta } = skills;
+
+  return (
+    <>
+      {/* create button */}
+      {
+        resource?.data.includes('create') &&
+        <Button
+          variant="contained"
+          onClick={() => {
+            setImageUrl('');
+            setLogoUrl('');
+            handleOpenAddEdit();
+          }}
+          disabled={loading}
+        >
+          Create
+        </Button>
+      }
+
+      <ModalAddEdit />
 
       {/* modal view */}
       {resource?.data.includes('view') &&
@@ -596,8 +606,6 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
         onPageChange={handlePageChange}
         onRowsPerPageChange={handleChangeItemPerPageSelect}
       />
-
-
 
       {/* modal confirmation delete */}
       <ModalConfirmation
