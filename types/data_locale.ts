@@ -34,6 +34,9 @@ interface Sidebar {
   school: {
     title: string;
   };
+  company: {
+    title: string;
+  };
 }
 
 export interface DataLocale {

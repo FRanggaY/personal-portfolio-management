@@ -35,6 +35,9 @@ const engData = {
     school: {
       title: 'School'
     },
+    company: {
+      title: 'Company'
+    },
   }
 }
 
@@ -72,6 +75,9 @@ const indData = {
     },
     school: {
       title: 'Universitas'
+    },
+    company: {
+      title: 'Perusahaan'
     },
   },
 }

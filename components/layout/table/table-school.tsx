@@ -246,7 +246,6 @@ const TableSchool = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number,
     router.push(newPath);
   };
 
-  {/* reuse modal for add or edit */}
   const ModalAddEdit = () => {
     return (
       <Modal

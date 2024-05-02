@@ -4,8 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { Button, TablePagination, Tooltip, Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Modal, Box, Typography, Grid, ButtonGroup, LinearProgress, FormGroup, FormControlLabel, Switch, CardContent, Card } from '@mui/material';
 import { Formik, Form, Field } from 'formik';
 import { TextField } from 'formik-mui';
-import { deleteSkill, getSkills, getSkillResource, getSkill } from '@/data/repository/skill-repository';
-import { ResponseSkills, Skill } from '@/types/skill';
+import { deleteCompany, getCompanies, getCompanyResource, getCompany } from '@/data/repository/company-repository';
+import { ResponseCompanies, Company } from '@/types/company';
 import { TableDataNotFound, TableLoading } from '../../shared/table/table';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -19,8 +19,8 @@ import { getAccessToken } from '@/actions/auth/auth-action';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { SortableColumn } from '@/components/shared/table/column';
 import { VisuallyHiddenInput } from '@/components/shared/button/button';
-import { CreateSkillSchema, EditSkillSchema } from '@/schemas/skill';
-import { addSkill, editSkill } from '@/actions/skill/skill-action';
+import { CreateCompanySchema, EditCompanySchema } from '@/schemas/company';
+import { addCompany, editCompany } from '@/actions/company/company-action';
 import { ImageAvatarPreview } from '@/components/shared/dialog/image-preview';
 
 const modalStyle = {
@@ -35,8 +35,8 @@ const modalStyle = {
   p: 4,
 };
 
-const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, itemsPerPageList: number[] }) => {
-  const [skills, setSkills] = useState<ResponseSkills | null>(null);
+const TableCompany = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, itemsPerPageList: number[] }) => {
+  const [companies, setCompanies] = useState<ResponseCompanies | null>(null);
   const [resource, setResource] = useState<ResponseGeneralDynamicResource | null>(null);
   const [isModalConfirmDelete, setIsModalConfirmDelete] = useState({
     id: '',
@@ -55,7 +55,6 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
     id: '',
     code: '',
     name: '',
-    category: '',
     logo: '',
     image: '',
     is_active: false,
@@ -71,7 +70,6 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
       id: '',
       code: '',
       name: '',
-      category: '',
       logo: '',
       image: '',
       website_url: '',
@@ -91,7 +89,6 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
       id: '',
       code: '',
       name: '',
-      category: '',
       logo: '',
       image: '',
       website_url: '',
@@ -112,21 +109,21 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
     limit = itemsPerPage;
   }
 
-  const fetchSkills = async (offset: number, size: number) => {
+  const fetchCompanies = async (offset: number, size: number) => {
     setLoading(true);
     try {
       const accessToken = await getAccessToken();
       if (accessToken) {
-        const skillsData: ResponseSkills = await getSkills(accessToken.value, {
+        const companiesData: ResponseCompanies = await getCompanies(accessToken.value, {
           offset: offset,
           size: size,
           sort_by: sortBy,
           sort_order: sortOrder,
         });
-        setSkills(skillsData);
+        setCompanies(companiesData);
       }
     } catch (error) {
-      console.error("Error fetching skills:", error);
+      console.error("Error fetching companies:", error);
     } finally {
       // reset
       setLoading(false);
@@ -138,7 +135,7 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
     try {
       const accessToken = await getAccessToken();
       if (accessToken) {
-        const resourceData: ResponseGeneralDynamicResource = await getSkillResource(accessToken.value);
+        const resourceData: ResponseGeneralDynamicResource = await getCompanyResource(accessToken.value);
         setResource(resourceData);
       }
     } catch (error) {
@@ -150,12 +147,11 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
   };
 
   // handle edit
-  const handleEdit = (row: Skill) => {
+  const handleEdit = (row: Company) => {
     setForm({
       id: row.id,
       name: row.name,
       code: row.code,
-      category: row.category ?? '',
       is_active: row.is_active ?? false,
       image: '',
       logo: '',
@@ -171,14 +167,13 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
   const handleView = async (id: string) => {
     const accessToken = await getAccessToken();
     if (accessToken) {
-      const data = await getSkill(accessToken.value, id);
+      const data = await getCompany(accessToken.value, id);
       if (Object.keys(data.data).length > 0) {
         const result = data.data;
         setForm({
           id: result.id,
           name: result.name,
           code: result.code,
-          category: result.category ?? '',
           is_active: result.is_active ?? false,
           image: '',
           logo: '',
@@ -193,14 +188,14 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
     }
   };
 
-  const handleDeleteSkill = async () => {
+  const handleDeleteCompany = async () => {
     setLoading(true);
     try {
       const accessToken = await getAccessToken();
       if (accessToken) {
-        const data = await deleteSkill(accessToken.value, isModalConfirmDelete.id)
+        const data = await deleteCompany(accessToken.value, isModalConfirmDelete.id)
         if (data == 'SUCCESS') {
-          toast.success('skill deleted successfully');
+          toast.success('company deleted successfully');
 
           const params = new URLSearchParams(searchParams);
           params.set("page", String(1));
@@ -218,13 +213,13 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
       })
       setLoading(false);
     } catch (error) {
-      console.error("Error deleting skill:", error);
-      toast.error('skill deleted failed');
+      console.error("Error deleting company:", error);
+      toast.error('company deleted failed');
     }
   }
 
   useEffect(() => {
-    fetchSkills(Number(page), Number(limit),);
+    fetchCompanies(Number(page), Number(limit),);
   }, [page, limit, sortBy, sortOrder]);
 
   useEffect(() => {
@@ -256,45 +251,44 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
       <Modal
         open={openAddEdit}
         onClose={handleCloseAddEdit}
-        aria-labelledby="modal-skill-title"
-        aria-describedby="modal-skill-description"
+        aria-labelledby="modal-company-title"
+        aria-describedby="modal-company-description"
       >
         <Box sx={modalStyle}>
-          <Typography id="modal-skill-title" variant="h6" component="h2">
-            {editId ? 'Edit Skill' : 'Add Skill'}
+          <Typography id="modal-company-title" variant="h6" component="h2">
+            {editId ? 'Edit Company' : 'Add Company'}
           </Typography>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Formik
               initialValues={form}
-              validationSchema={editId ? CreateSkillSchema : EditSkillSchema}
+              validationSchema={editId ? CreateCompanySchema : EditCompanySchema}
               onSubmit={async (values, { setSubmitting }) => {
                 setSubmitting(false);
 
                 const formData = new FormData();
                 formData.append('code', `${values.code}`);
                 formData.append('name', `${values.name}`);
-                formData.append('category', `${values.category}`);
                 formData.append('website_url', `${values.website_url}`);
                 formData.append('image', values.image);
                 formData.append('logo', values.logo);
 
-                if (editId) { // update skill
+                if (editId) { // update company
                   formData.append('is_active', `${values.is_active}`);
 
-                  const message = await editSkill(editId, formData);
+                  const message = await editCompany(editId, formData);
                   if (message === 'SUCCESS') {
-                    fetchSkills(Number(page), Number(limit),);
+                    fetchCompanies(Number(page), Number(limit),);
                     handleCloseAddEdit()
-                    toast.success('skill updated successfully');
+                    toast.success('company updated successfully');
                   } else {
                     toast.error(message)
                   }
-                } else { // create new skill
-                  const message = await addSkill(formData);
+                } else { // create new company
+                  const message = await addCompany(formData);
                   if (message === 'SUCCESS') {
-                    fetchSkills(Number(page), Number(limit),);
+                    fetchCompanies(Number(page), Number(limit),);
                     handleCloseAddEdit()
-                    toast.success('skill created successfully');
+                    toast.success('company created successfully');
                   } else {
                     toast.error(message)
                   }
@@ -307,7 +301,7 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
                   <Grid container spacing={2}>
                     <Grid item xs={12}>
                       <Field
-                        id="skillCodeInput"
+                        id="companyCodeInput"
                         component={TextField}
                         name="code"
                         type="text"
@@ -317,7 +311,7 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
                     </Grid>
                     <Grid item xs={12}>
                       <Field
-                        id="skillNameInput"
+                        id="companyNameInput"
                         component={TextField}
                         name="name"
                         type="text"
@@ -327,16 +321,7 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
                     </Grid>
                     <Grid item xs={12}>
                       <Field
-                        id="skillNameCategory"
-                        component={TextField}
-                        name="category"
-                        label="Category"
-                        fullWidth
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Field
-                        id="skillNameWebsiteUrl"
+                        id="companyNameWebsiteUrl"
                         component={TextField}
                         name="website_url"
                         label="Website URL"
@@ -445,7 +430,7 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
     );
   }
 
-  if (!skills || skills?.data?.length === 0) {
+  if (!companies || companies?.data?.length === 0) {
     return <>
       {
         resource?.data.includes('create') &&
@@ -466,7 +451,7 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
     </>;
   }
 
-  const { data, meta } = skills;
+  const { data, meta } = companies;
 
   return (
     <>
@@ -487,18 +472,18 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
       }
 
       <ModalAddEdit />
-
+      
       {/* modal view */}
       {resource?.data.includes('view') &&
         <Modal
           open={openView}
           onClose={handleCloseView}
-          aria-labelledby="modal-view-skill-title"
-          aria-describedby="modal-view-skill-description"
+          aria-labelledby="modal-view-company-title"
+          aria-describedby="modal-view-company-description"
         >
           <Box sx={modalStyle}>
-            <Typography id="modal-view-skill-title" variant="h6" component="h2">
-              View Skill
+            <Typography id="modal-view-company-title" variant="h6" component="h2">
+              View Company
             </Typography>
             <Card sx={{ mt: 1 }}>
               <CardContent>
@@ -518,9 +503,6 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
                       <Chip label="disabled" color="error"></Chip>
                   }
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {form.category}
-                </Typography>
               </CardContent>
             </Card>
           </Box>
@@ -535,12 +517,11 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
               <TableCell align="left">ACTION</TableCell>
               <SortableColumn columnKey="code" label="CODE" sortBy={sortBy} sortOrder={sortOrder} router={router} searchParams={searchParams} />
               <SortableColumn columnKey="name" label="NAME" sortBy={sortBy} sortOrder={sortOrder} router={router} searchParams={searchParams} />
-              <SortableColumn columnKey="category" label="CATEGORY" sortBy={sortBy} sortOrder={sortOrder} router={router} searchParams={searchParams} />
               <SortableColumn columnKey="is_active" label="STATUS" sortBy={sortBy} sortOrder={sortOrder} router={router} searchParams={searchParams} />
             </TableRow>
           </TableHead>
           <TableBody>
-            {data?.map((row: Skill) => (
+            {data?.map((row: Company) => (
               <TableRow key={row.id} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                 <TableCell align="center">
                   {resource?.data.includes('view') &&
@@ -583,7 +564,6 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
                 </TableCell>
                 <TableCell align="left">{row.code}</TableCell>
                 <TableCell align="left">{row.name}</TableCell>
-                <TableCell align="left">{row.category}</TableCell>
                 <TableCell align="left">
                   {
                     row.is_active ?
@@ -606,6 +586,8 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
         onRowsPerPageChange={handleChangeItemPerPageSelect}
       />
 
+
+
       {/* modal confirmation delete */}
       <ModalConfirmation
         title={'Delete Confirmation'}
@@ -616,11 +598,11 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
           id: '',
           show: false,
         })}
-        onOk={handleDeleteSkill}
+        onOk={handleDeleteCompany}
         loading={loading}
       />
     </>
   );
 };
 
-export default TableSkill;
+export default TableCompany;

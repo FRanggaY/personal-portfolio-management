@@ -9,6 +9,7 @@ import ListItemText from '@mui/material/ListItemText';
 import { Tooltip } from "@mui/material"
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import LocationCityIcon from '@mui/icons-material/LocationCity';
+import BusinessIcon from '@mui/icons-material/Business';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import { usePathname, useParams } from 'next/navigation'
 import { dataLocale, validLocale } from '@/lib/locale';
@@ -61,6 +62,11 @@ export default function BarSide({ open, drawerWidth }: any) {
       url: `/${params.locale}/panel/school`,
       title: t.school.title,
       icon: <LocationCityIcon />
+    },
+    {
+      url: `/${params.locale}/panel/company`,
+      title: t.company.title,
+      icon: <BusinessIcon />
     },
   ]
 
