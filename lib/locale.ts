@@ -32,6 +32,9 @@ const engData = {
     skill: {
       title: 'Skill'
     },
+    skill_mapping: {
+      title: 'Skill Mapping'
+    },
     school: {
       title: 'School'
     },
@@ -84,6 +87,9 @@ const indData = {
     },
     skill: {
       title: 'Skill'
+    },
+    skill_mapping: {
+      title: 'Skill Mapping'
     },
     school: {
       title: 'Universitas'

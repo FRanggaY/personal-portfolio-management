@@ -1,27 +1,24 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Button, TablePagination, Tooltip, Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Modal, Box, Typography, Grid, ButtonGroup, LinearProgress, FormGroup, FormControlLabel, Switch, CardContent, Card } from '@mui/material';
-import { Formik, Form, Field } from 'formik';
-import { TextField } from 'formik-mui';
-import { deleteSkill, getSkills, getSkillResource, getSkill } from '@/data/repository/skill-repository';
-import { ResponseSkills, Skill } from '@/types/skill';
+import { Button, TablePagination, Tooltip, Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Modal, Box, Typography, Grid, LinearProgress, FormGroup, FormControlLabel, Switch, CardContent, Card, FormControl, InputLabel, Select, MenuItem, FormHelperText } from '@mui/material';
+import { Formik, Form } from 'formik';
+import { deleteSkillMapping, getSkillMappings, getSkillMapping } from '@/data/repository/skill-mapping-repository';
+import { getSkills, getSkillResource } from '@/data/repository/skill-repository';
+import { ResponseSkillMappings, SkillMapping } from '@/types/skill-mapping';
 import { TableDataNotFound, TableLoading } from '../../shared/table/table';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import Image from "next/image";
 import { ModalConfirmation } from '@/components/shared/modal/modal';
 import { toast } from 'sonner';
 import { ResponseGeneralDynamicResource } from '@/types/general';
 import { getAccessToken } from '@/actions/auth/auth-action';
 import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import { SortableColumn } from '@/components/shared/table/column';
-import { VisuallyHiddenInput } from '@/components/shared/button/button';
-import { CreateSkillSchema, EditSkillSchema } from '@/schemas/skill';
-import { addSkill, editSkill } from '@/actions/skill/skill-action';
-import { ImageAvatarPreview } from '@/components/shared/dialog/image-preview';
+import { CreateSkillMappingSchema, EditSkillMappingSchema } from '@/schemas/skill-mapping';
+import { addSkillMapping, editSkillMapping } from '@/actions/skill-mapping/skill-mapping-action';
+import { Skill, ResponseSkills } from '@/types/skill';
 
 const modalStyle = {
   position: 'absolute',
@@ -35,17 +32,18 @@ const modalStyle = {
   p: 4,
 };
 
-const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, itemsPerPageList: number[] }) => {
-  const [skills, setSkills] = useState<ResponseSkills | null>(null);
+const TableSkillMapping = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, itemsPerPageList: number[] }) => {
+  const [skillMappings, setSkillMappings] = useState<ResponseSkillMappings | null>(null);
   const [resource, setResource] = useState<ResponseGeneralDynamicResource | null>(null);
   const [isModalConfirmDelete, setIsModalConfirmDelete] = useState({
     id: '',
     show: false,
   });
   const [loading, setLoading] = useState(true);
+  const [skills, setSkills] = useState<Skill[] | null>(null);
   const router = useRouter();
-  const searchParams = useSearchParams();
   const params = useParams<{ locale: string; }>();
+  const searchParams = useSearchParams();
   const page = searchParams.get('page') ?? 1;
   let limit = searchParams.get('limit') ?? itemsPerPage;
   const sortBy = searchParams.get('sort_by') ?? "name";
@@ -54,13 +52,12 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
   const [editId, setEditId] = useState('');
   const [form, setForm] = useState({
     id: '',
-    code: '',
-    name: '',
-    category: '',
-    logo: '',
-    image: '',
+    skill_id: '',
+    skill: {
+      id: '',
+      name: '',
+    },
     is_active: false,
-    website_url: '',
   })
 
   const [openAddEdit, setOpenAddEdit] = React.useState(false);
@@ -70,42 +67,29 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
     setEditId('');
     setForm({
       id: '',
-      code: '',
-      name: '',
-      category: '',
-      logo: '',
-      image: '',
-      website_url: '',
+      skill_id: '',
+      skill: {
+        id: '',
+        name: '',
+      },
       is_active: false,
     })
   };
   // view
-  const [imageData, setImageData] = useState({
-    name: '',
-    image_url: '',
-  })
   const [openView, setOpenView] = React.useState(false);
   const handleOpenView = () => setOpenView(true);
   const handleCloseView = () => {
     setOpenView(false);
     setForm({
       id: '',
-      code: '',
-      name: '',
-      category: '',
-      logo: '',
-      image: '',
-      website_url: '',
+      skill_id: '',
+      skill: {
+        id: '',
+        name: '',
+      },
       is_active: false,
     })
-    setImageData({
-      name: '',
-      image_url: '',
-    });
   };
-
-  const [imageUrl, setImageUrl] = useState<string>('');
-  const [logoUrl, setLogoUrl] = useState<string>('');
 
   // put default to base limit if that outside range
   let parsedLimit = Number(limit);
@@ -113,21 +97,63 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
     limit = itemsPerPage;
   }
 
+  const fetchSkillsBatch = async (offset: number, size: number) => {
+    try {
+      const accessToken = await getAccessToken();
+      if (accessToken) {
+        const data: ResponseSkills = await getSkills(accessToken.value, { offset, size, is_active: true });
+        return data;
+      }
+    } catch (error) {
+      console.error("Error fetching skills:", error);
+      throw error; // Propagate the error to the caller
+    }
+  };
+
   const fetchSkills = async (offset: number, size: number) => {
+    setLoading(true);
+    try {
+      const skillsBatch = [];
+      let currentOffset = offset;
+      while (true) {
+        const skillsData = await fetchSkillsBatch(currentOffset, size);
+        if (skillsData) {
+          skillsBatch.push(skillsData.data);
+          if (skillsData.meta.offset < size) {
+            // Break the loop if fetched skills are less than requested size
+            break;
+          }
+        } else {
+          break;
+        }
+        currentOffset += size; // Increment offset for the next batch
+      }
+      const allSkills = skillsBatch.flat(); // Flatten the array of batches
+      if (allSkills != null) {
+        setSkills(allSkills);
+      }
+    } catch (error) {
+      console.error("Error fetching skills:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchSkillMappings = async (offset: number, size: number) => {
     setLoading(true);
     try {
       const accessToken = await getAccessToken();
       if (accessToken) {
-        const skillsData: ResponseSkills = await getSkills(accessToken.value, {
+        const skillMappingsData: ResponseSkillMappings = await getSkillMappings(accessToken.value, {
           offset: offset,
           size: size,
           sort_by: sortBy,
           sort_order: sortOrder,
         });
-        setSkills(skillsData);
+        setSkillMappings(skillMappingsData);
       }
     } catch (error) {
-      console.error("Error fetching skills:", error);
+      console.error("Error fetching skillMappings:", error);
     } finally {
       // reset
       setLoading(false);
@@ -151,19 +177,16 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
   };
 
   // handle edit
-  const handleEdit = (row: Skill) => {
+  const handleEdit = (row: SkillMapping) => {
     setForm({
       id: row.id,
-      name: row.name,
-      code: row.code,
-      category: row.category ?? '',
+      skill_id: row.skill.id,
+      skill: {
+        id: '',
+        name: '',
+      },
       is_active: row.is_active ?? false,
-      image: '',
-      logo: '',
-      website_url: row.website_url ?? '',
     })
-    setImageUrl(row.image_url);
-    setLogoUrl(row.logo_url);
     setEditId(row.id);
     handleOpenAddEdit();
   };
@@ -172,36 +195,28 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
   const handleView = async (id: string) => {
     const accessToken = await getAccessToken();
     if (accessToken) {
-      const data = await getSkill(accessToken.value, id);
+      const data = await getSkillMapping(accessToken.value, id);
       if (Object.keys(data.data).length > 0) {
         const result = data.data;
         setForm({
           id: result.id,
-          name: result.name,
-          code: result.code,
-          category: result.category ?? '',
+          skill_id: result.skill.id,
+          skill: result.skill,
           is_active: result.is_active ?? false,
-          image: '',
-          logo: '',
-          website_url: result.website_url ?? '',
-        })
-        setImageData({
-          name: result.name,
-          image_url: result.logo_url
         })
       }
       handleOpenView();
     }
   };
 
-  const handleDeleteSkill = async () => {
+  const handleDeleteSkillMapping = async () => {
     setLoading(true);
     try {
       const accessToken = await getAccessToken();
       if (accessToken) {
-        const data = await deleteSkill(accessToken.value, isModalConfirmDelete.id)
+        const data = await deleteSkillMapping(accessToken.value, isModalConfirmDelete.id)
         if (data == 'SUCCESS') {
-          toast.success('skill deleted successfully');
+          toast.success('skillMapping deleted successfully');
 
           const params = new URLSearchParams(searchParams);
           params.set("page", String(1));
@@ -219,17 +234,18 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
       })
       setLoading(false);
     } catch (error) {
-      console.error("Error deleting skill:", error);
-      toast.error('skill deleted failed');
+      console.error("Error deleting skillMapping:", error);
+      toast.error('skillMapping deleted failed');
     }
   }
 
   useEffect(() => {
-    fetchSkills(Number(page), Number(limit),);
+    fetchSkillMappings(Number(page), Number(limit),);
   }, [page, limit, sortBy, sortOrder]);
 
   useEffect(() => {
     fetchResource();
+    fetchSkills(1, 10);
   }, [])
 
   const handlePageChange = (event: React.MouseEvent<HTMLButtonElement> | null, page: number) => {
@@ -257,45 +273,39 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
       <Modal
         open={openAddEdit}
         onClose={handleCloseAddEdit}
-        aria-labelledby="modal-skill-title"
-        aria-describedby="modal-skill-description"
+        aria-labelledby="modal-skillMapping-title"
+        aria-describedby="modal-skillMapping-description"
       >
         <Box sx={modalStyle}>
-          <Typography id="modal-skill-title" variant="h6" component="h2">
-            {editId ? 'Edit Skill' : 'Add Skill'}
+          <Typography id="modal-skillMapping-title" variant="h6" component="h2">
+            {editId ? 'Edit SkillMapping' : 'Add SkillMapping'}
           </Typography>
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Formik
               initialValues={form}
-              validationSchema={editId ? CreateSkillSchema : EditSkillSchema}
+              validationSchema={editId ? CreateSkillMappingSchema : EditSkillMappingSchema}
               onSubmit={async (values, { setSubmitting }) => {
                 setSubmitting(false);
 
                 const formData = new FormData();
-                formData.append('code', `${values.code}`);
-                formData.append('name', `${values.name}`);
-                formData.append('category', `${values.category}`);
-                formData.append('website_url', `${values.website_url}`);
-                formData.append('image', values.image);
-                formData.append('logo', values.logo);
-
-                if (editId) { // update skill
+                formData.append('skill_id', `${values.skill_id}`);
+                if (editId) { // update skillMapping
                   formData.append('is_active', `${values.is_active}`);
 
-                  const message = await editSkill(editId, formData);
+                  const message = await editSkillMapping(editId, formData);
                   if (message === 'SUCCESS') {
-                    fetchSkills(Number(page), Number(limit),);
+                    fetchSkillMappings(Number(page), Number(limit),);
                     handleCloseAddEdit()
-                    toast.success('skill updated successfully');
+                    toast.success('skillMapping updated successfully');
                   } else {
                     toast.error(message)
                   }
-                } else { // create new skill
-                  const message = await addSkill(formData);
+                } else { // create new skillMapping
+                  const message = await addSkillMapping(formData);
                   if (message === 'SUCCESS') {
-                    fetchSkills(Number(page), Number(limit),);
+                    fetchSkillMappings(Number(page), Number(limit),);
                     handleCloseAddEdit()
-                    toast.success('skill created successfully');
+                    toast.success('skillMapping created successfully');
                   } else {
                     toast.error(message)
                   }
@@ -303,46 +313,30 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
 
               }}
             >
-              {({ submitForm, isSubmitting, setFieldValue, values }) => (
+              {({ submitForm, isSubmitting, setFieldValue, values, touched, errors }) => (
                 <Form>
                   <Grid container spacing={2}>
                     <Grid item xs={12}>
-                      <Field
-                        id="skillCodeInput"
-                        component={TextField}
-                        name="code"
-                        type="text"
-                        label="Code"
-                        fullWidth
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Field
-                        id="skillNameInput"
-                        component={TextField}
-                        name="name"
-                        type="text"
-                        label="Name"
-                        fullWidth
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Field
-                        id="skillNameCategory"
-                        component={TextField}
-                        name="category"
-                        label="Category"
-                        fullWidth
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Field
-                        id="skillNameWebsiteUrl"
-                        component={TextField}
-                        name="website_url"
-                        label="Website URL"
-                        fullWidth
-                      />
+                      <FormControl fullWidth>
+                        <InputLabel id="select-skill_id-label">Skill</InputLabel>
+                        <Select
+                          labelId="select-skill_id-label"
+                          id="select-skill_id"
+                          value={values.skill_id}
+                          label="Skill"
+                          onChange={(event) => {
+                            setFieldValue("skill_id", event.target.value);
+                          }}
+                          error={touched.skill_id && Boolean(errors.skill_id)}
+                        >
+                          {
+                            skills?.map((data: Skill) => {
+                              return <MenuItem value={data.id} key={data.id}>{data.name}</MenuItem>
+                            })
+                          }
+                        </Select>
+                      </FormControl>
+                      <FormHelperText>{touched.skill_id && errors.skill_id}</FormHelperText>
                     </Grid>
                     {editId && <Grid item xs={12}>
                       <FormGroup>
@@ -358,63 +352,6 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
                         } label="Active" />
                       </FormGroup>
                     </Grid>}
-                    <Grid item xs={12} lg={6}>
-                      {
-                        imageUrl ?
-                          <Image
-                            src={imageUrl}
-                            width={500}
-                            height={500}
-                            alt={values.name}
-                            id="imagePreview"
-                            layout="responsive"
-                            priority={true}
-                          /> : null
-                      }
-                      <ButtonGroup variant="contained">
-                        <Button component="label" startIcon={<CloudUploadIcon />}>
-                          Upload Image
-                          <VisuallyHiddenInput type="file" onChange={(event) => {
-                            const file = event.target.files?.[0];
-                            setFieldValue("image", file);
-                            if (file) {
-                              setImageUrl(URL.createObjectURL(file))
-                            } else {
-                              setImageUrl('')
-                            }
-                          }} />
-                        </Button>
-                      </ButtonGroup>
-                    </Grid>
-                    <Grid item xs={12} lg={6}>
-                      {
-                        logoUrl ?
-                          <Image
-                            src={logoUrl}
-                            width={500}
-                            height={500}
-                            alt={values.name}
-                            id="logoPreview"
-                            layout="responsive"
-                            priority={true}
-                          /> : null
-                      }
-                      <ButtonGroup variant="contained">
-                        <Button component="label" startIcon={<CloudUploadIcon />}>
-                          Upload Logo
-                          <VisuallyHiddenInput type="file" onChange={(event) => {
-                            const file = event.target.files?.[0];
-                            setFieldValue("logo", file);
-                            if (file) {
-                              setLogoUrl(URL.createObjectURL(file))
-                            } else {
-                              setLogoUrl('')
-                            }
-                          }} />
-                        </Button>
-                      </ButtonGroup>
-                    </Grid>
-
                   </Grid>
                   {isSubmitting && <LinearProgress />}
                   <br />
@@ -446,15 +383,19 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
     );
   }
 
-  if (!skills || skills?.data?.length === 0) {
+  if (!skillMappings || skillMappings?.data?.length === 0) {
     return <>
+      <Button
+        variant="contained"
+        href={`/${params.locale}/panel/skill`}
+      >
+        Back
+      </Button>
       {
-        resource?.data.includes('create_skill_other') &&
+        resource?.data.includes('create_skill') &&
         <Button
           variant="contained"
           onClick={() => {
-            setImageUrl('');
-            setLogoUrl('');
             handleOpenAddEdit();
           }}
           disabled={loading}
@@ -462,29 +403,29 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
           Create
         </Button>
       }
-      <Button
-        variant="contained"
-        href={`/${params.locale}/panel/skill/mapping`}
-      >
-        Mapping
-      </Button>
+
+      <ModalAddEdit />
       <ModalAddEdit />
       <TableDataNotFound />
     </>;
   }
 
-  const { data, meta } = skills;
+  const { data, meta } = skillMappings;
 
   return (
     <>
       {/* create button */}
+      <Button
+        variant="contained"
+        href={`/${params.locale}/panel/skill`}
+      >
+        Back
+      </Button>
       {
-        resource?.data.includes('create_skill_other') &&
+        resource?.data.includes('create_skill') &&
         <Button
           variant="contained"
           onClick={() => {
-            setImageUrl('');
-            setLogoUrl('');
             handleOpenAddEdit();
           }}
           disabled={loading}
@@ -492,47 +433,32 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
           Create
         </Button>
       }
-      <Button
-        variant="contained"
-        href={`/${params.locale}/panel/skill/mapping`}
-      >
-        Mapping
-      </Button>
 
       <ModalAddEdit />
 
       {/* modal view */}
-      {resource?.data.includes('view_skill_other') &&
+      {resource?.data.includes('view_skill') &&
         <Modal
           open={openView}
           onClose={handleCloseView}
-          aria-labelledby="modal-view-skill-title"
-          aria-describedby="modal-view-skill-description"
+          aria-labelledby="modal-view-skillMapping-title"
+          aria-describedby="modal-view-skillMapping-description"
         >
           <Box sx={modalStyle}>
-            <Typography id="modal-view-skill-title" variant="h6" component="h2">
-              View Skill
+            <Typography id="modal-view-skillMapping-title" variant="h6" component="h2">
+              View SkillMapping
             </Typography>
             <Card sx={{ mt: 1 }}>
               <CardContent>
-                {
-                  imageData.image_url &&
-                  <ImageAvatarPreview
-                    data={imageData}
-                  />
-                }
                 <Typography sx={{ fontSize: 14, marginTop: '10px' }} color="text.secondary" gutterBottom>
-                  CODE ({form.code})
+                  {form.skill.name}
                 </Typography>
                 <Typography variant="h5" gutterBottom>
-                  {form.name} {
+                  {
                     form.is_active ?
                       <Chip label="active" color="success"></Chip> :
                       <Chip label="disabled" color="error"></Chip>
                   }
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {form.category}
                 </Typography>
               </CardContent>
             </Card>
@@ -546,17 +472,15 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
           <TableHead>
             <TableRow>
               <TableCell align="left">ACTION</TableCell>
-              <SortableColumn columnKey="code" label="CODE" sortBy={sortBy} sortOrder={sortOrder} router={router} searchParams={searchParams} />
-              <SortableColumn columnKey="name" label="NAME" sortBy={sortBy} sortOrder={sortOrder} router={router} searchParams={searchParams} />
-              <SortableColumn columnKey="category" label="CATEGORY" sortBy={sortBy} sortOrder={sortOrder} router={router} searchParams={searchParams} />
+              <SortableColumn columnKey="skill_id" label="Skill" sortBy={sortBy} sortOrder={sortOrder} router={router} searchParams={searchParams} />
               <SortableColumn columnKey="is_active" label="STATUS" sortBy={sortBy} sortOrder={sortOrder} router={router} searchParams={searchParams} />
             </TableRow>
           </TableHead>
           <TableBody>
-            {data?.map((row: Skill) => (
+            {data?.map((row: SkillMapping) => (
               <TableRow key={row.id} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                 <TableCell align="center">
-                  {resource?.data.includes('view_skill_other') &&
+                  {resource?.data.includes('view_skill') &&
                     <Tooltip title="View">
                       <Button
                         color="info"
@@ -568,7 +492,7 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
                       </Button>
                     </Tooltip>
                   }
-                  {resource?.data.includes('edit_skill_other') &&
+                  {resource?.data.includes('edit_skill') &&
                     <Tooltip title="Edit">
                       <Button
                         color="warning"
@@ -580,7 +504,7 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
                       </Button>
                     </Tooltip>
                   }
-                  {resource?.data.includes('delete_skill_other') &&
+                  {resource?.data.includes('delete_skill') &&
                     <Tooltip title="Delete">
                       <Button
                         onClick={() => setIsModalConfirmDelete({
@@ -594,9 +518,7 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
                     </Tooltip>
                   }
                 </TableCell>
-                <TableCell align="left">{row.code}</TableCell>
-                <TableCell align="left">{row.name}</TableCell>
-                <TableCell align="left">{row.category}</TableCell>
+                <TableCell align="left">{row.skill.name}</TableCell>
                 <TableCell align="left">
                   {
                     row.is_active ?
@@ -619,6 +541,8 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
         onRowsPerPageChange={handleChangeItemPerPageSelect}
       />
 
+
+
       {/* modal confirmation delete */}
       <ModalConfirmation
         title={'Delete Confirmation'}
@@ -629,11 +553,11 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
           id: '',
           show: false,
         })}
-        onOk={handleDeleteSkill}
+        onOk={handleDeleteSkillMapping}
         loading={loading}
       />
     </>
   );
 };
 
-export default TableSkill;
+export default TableSkillMapping;

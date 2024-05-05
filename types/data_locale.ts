@@ -31,6 +31,9 @@ interface Sidebar {
   skill: {
     title: string;
   };
+  skill_mapping: {
+    title: string;
+  };
   school: {
     title: string;
   };
