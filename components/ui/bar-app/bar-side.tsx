@@ -77,11 +77,11 @@ export default function BarSide({ open, drawerWidth }: any) {
       title: t.experience.title,
       icon: <BusinessCenterIcon />
     },
-    // {
-    //   url: `/${params.locale}/panel/education`,
-    //   title: t.education.title,
-    //   icon: <SchoolIcon />
-    // },
+    {
+      url: `/${params.locale}/panel/education`,
+      title: t.education.title,
+      icon: <SchoolIcon />
+    },
     // {
     //   url: `/${params.locale}/panel/service`,
     //   title: t.service.title,
