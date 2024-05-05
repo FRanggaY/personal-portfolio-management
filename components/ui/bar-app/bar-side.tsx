@@ -87,11 +87,11 @@ export default function BarSide({ open, drawerWidth }: any) {
       title: t.solution.title,
       icon: <DriveFileRenameOutlineIcon />
     },
-    // {
-    //   url: `/${params.locale}/panel/project`,
-    //   title: t.project.title,
-    //   icon: <InventoryIcon />
-    // },
+    {
+      url: `/${params.locale}/panel/project`,
+      title: t.project.title,
+      icon: <InventoryIcon />
+    },
   ]
 
   return (
