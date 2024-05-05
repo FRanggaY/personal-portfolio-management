@@ -37,6 +37,18 @@ interface Sidebar {
   company: {
     title: string;
   };
+  experience: {
+    title: string;
+  };
+  education: {
+    title: string;
+  };
+  service: {
+    title: string;
+  };
+  project: {
+    title: string;
+  };
 }
 
 export interface DataLocale {

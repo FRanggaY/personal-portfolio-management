@@ -15,7 +15,7 @@ export const addCompany = async (formData: FormData) => {
 
     return data.detail
   } else {
-    return { detail: "No user found" };
+    return { detail: "No company found" };
   }
 }
 
@@ -30,6 +30,6 @@ export const editCompany = async (id: string, formData: FormData) => {
 
     return data.detail
   } else {
-    return { detail: "No user found" };
+    return { detail: "No company found" };
   }
 }

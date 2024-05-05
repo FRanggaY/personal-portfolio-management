@@ -11,6 +11,10 @@ import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import LocationCityIcon from '@mui/icons-material/LocationCity';
 import BusinessIcon from '@mui/icons-material/Business';
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
+import SchoolIcon from '@mui/icons-material/School';
+import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
+import InventoryIcon from '@mui/icons-material/Inventory';
 import { usePathname, useParams } from 'next/navigation'
 import { dataLocale, validLocale } from '@/lib/locale';
 import Link from 'next/link'
@@ -68,6 +72,26 @@ export default function BarSide({ open, drawerWidth }: any) {
       title: t.company.title,
       icon: <BusinessIcon />
     },
+    {
+      url: `/${params.locale}/panel/experience`,
+      title: t.experience.title,
+      icon: <BusinessCenterIcon />
+    },
+    // {
+    //   url: `/${params.locale}/panel/education`,
+    //   title: t.education.title,
+    //   icon: <SchoolIcon />
+    // },
+    // {
+    //   url: `/${params.locale}/panel/service`,
+    //   title: t.service.title,
+    //   icon: <DriveFileRenameOutlineIcon />
+    // },
+    // {
+    //   url: `/${params.locale}/panel/project`,
+    //   title: t.project.title,
+    //   icon: <InventoryIcon />
+    // },
   ]
 
   return (

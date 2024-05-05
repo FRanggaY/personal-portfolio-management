@@ -15,7 +15,7 @@ export const addSchool = async (formData: FormData) => {
 
     return data.detail
   } else {
-    return { detail: "No user found" };
+    return { detail: "No school found" };
   }
 }
 
@@ -30,6 +30,6 @@ export const editSchool = async (id: string, formData: FormData) => {
 
     return data.detail
   } else {
-    return { detail: "No user found" };
+    return { detail: "No school found" };
   }
 }

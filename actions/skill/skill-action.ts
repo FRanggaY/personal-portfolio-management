@@ -15,7 +15,7 @@ export const addSkill = async (formData: FormData) => {
 
     return data.detail
   } else {
-    return { detail: "No user found" };
+    return { detail: "No skill found" };
   }
 }
 
@@ -30,6 +30,6 @@ export const editSkill = async (id: string, formData: FormData) => {
 
     return data.detail
   } else {
-    return { detail: "No user found" };
+    return { detail: "No skill found" };
   }
 }

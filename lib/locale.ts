@@ -38,6 +38,18 @@ const engData = {
     company: {
       title: 'Company'
     },
+    experience: {
+      title: 'Experience'
+    },
+    education: {
+      title: 'Education'
+    },
+    service: {
+      title: 'Service'
+    },
+    project: {
+      title: 'Project'
+    },
   }
 }
 
@@ -78,6 +90,18 @@ const indData = {
     },
     company: {
       title: 'Perusahaan'
+    },
+    experience: {
+      title: 'Pengalaman'
+    },
+    education: {
+      title: 'Edukasi'
+    },
+    service: {
+      title: 'Layanan'
+    },
+    project: {
+      title: 'Proyek'
     },
   },
 }
