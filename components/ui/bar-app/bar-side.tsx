@@ -82,11 +82,11 @@ export default function BarSide({ open, drawerWidth }: any) {
       title: t.education.title,
       icon: <SchoolIcon />
     },
-    // {
-    //   url: `/${params.locale}/panel/service`,
-    //   title: t.service.title,
-    //   icon: <DriveFileRenameOutlineIcon />
-    // },
+    {
+      url: `/${params.locale}/panel/solution`,
+      title: t.solution.title,
+      icon: <DriveFileRenameOutlineIcon />
+    },
     // {
     //   url: `/${params.locale}/panel/project`,
     //   title: t.project.title,

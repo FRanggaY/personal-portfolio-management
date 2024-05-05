@@ -46,7 +46,7 @@ interface Sidebar {
   education: {
     title: string;
   };
-  service: {
+  solution: {
     title: string;
   };
   project: {

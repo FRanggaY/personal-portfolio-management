@@ -47,8 +47,8 @@ const engData = {
     education: {
       title: 'Education'
     },
-    service: {
-      title: 'Service'
+    solution: {
+      title: 'Solution'
     },
     project: {
       title: 'Project'
@@ -103,8 +103,8 @@ const indData = {
     education: {
       title: 'Edukasi'
     },
-    service: {
-      title: 'Layanan'
+    solution: {
+      title: 'Solusi'
     },
     project: {
       title: 'Proyek'
