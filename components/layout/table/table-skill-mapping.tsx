@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Button, TablePagination, Tooltip, Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Modal, Box, Typography, Grid, LinearProgress, FormGroup, FormControlLabel, Switch, CardContent, Card, FormControl, InputLabel, Select, MenuItem, FormHelperText } from '@mui/material';
 import { Formik, Form } from 'formik';
 import { deleteSkillMapping, getSkillMappings, getSkillMapping } from '@/data/repository/skill-mapping-repository';
-import { getSkills, getSkillResource } from '@/data/repository/skill-repository';
+import { getSkills, getSkillResource } from '@/data/repository/skill/skill-repository';
 import { ResponseSkillMappings, SkillMapping } from '@/types/skill-mapping';
 import { TableDataNotFound, TableLoading } from '../../shared/table/table';
 import EditIcon from '@mui/icons-material/Edit';

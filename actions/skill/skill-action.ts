@@ -1,6 +1,6 @@
 'use server';
 
-import { createSkill, updateSkill } from "@/data/repository/skill-repository";
+import { createSkill, updateSkill } from "@/data/repository/skill/skill-repository";
 import { revalidatePath } from "next/cache";
 import { getAccessToken } from "../auth/auth-action";
 
