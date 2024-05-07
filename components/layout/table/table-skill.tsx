@@ -169,8 +169,8 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
         const result = dataTranslation.data;
         setForm(prevForm => ({
           ...prevForm,
-          description: result.description,
-          name_2nd: result.name,
+          description: result.description ?? '',
+          name_2nd: result.name ?? '',
         }));
         setEditIdTranslation(result.id);
       } else {
@@ -203,6 +203,16 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
           name: result.name,
           image_url: result.logo_url
         })
+
+        const dataTranslation = await getSkillTranslation(accessToken.value, id, params.locale);
+        if (Object.keys(dataTranslation.data).length > 0) {
+          const result = dataTranslation.data;
+          setForm(prevForm => ({
+            ...prevForm,
+            description: result.description ?? '',
+            name_2nd: result.name ?? '',
+          }));
+        }
       }
       handleOpenView();
     }
@@ -298,12 +308,12 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
 
                   const message = await editSkill(editId, formData);
                   if (message === 'SUCCESS') {
-    
+
                     // skill translation
                     const formDataTranslation = new FormData();
                     formDataTranslation.append('name', `${values.name_2nd}`);
                     formDataTranslation.append('description', `${values.description}`);
-                    
+
                     let message;
                     if (editIdTranslation) {
                       message = await editSkillTranslation(editId, params.locale, formDataTranslation)
@@ -586,7 +596,7 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
                   }
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {form.category}
+                  {form.name_2nd} {form.category} {form.description}
                 </Typography>
               </CardContent>
             </Card>

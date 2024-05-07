@@ -1,6 +1,6 @@
 'use server';
 
-import { createCompany, updateCompany } from "@/data/repository/company-repository";
+import { createCompany, updateCompany } from "@/data/repository/company/company-repository";
 import { revalidatePath } from "next/cache";
 import { getAccessToken } from "../auth/auth-action";
 

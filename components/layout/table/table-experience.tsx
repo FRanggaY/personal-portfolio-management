@@ -19,7 +19,7 @@ import { SortableColumn } from '@/components/shared/table/column';
 import { CreateExperienceSchema, EditExperienceSchema } from '@/schemas/experience';
 import { addExperience, editExperience } from '@/actions/experience/experience-action';
 import { Company, ResponseCompanies } from '@/types/company';
-import { getCompanies } from '@/data/repository/company-repository';
+import { getCompanies } from '@/data/repository/company/company-repository';
 
 const modalStyle = {
   position: 'absolute',

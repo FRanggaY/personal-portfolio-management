@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Button, TablePagination, Tooltip, Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Modal, Box, Typography, Grid, ButtonGroup, LinearProgress, FormGroup, FormControlLabel, Switch, CardContent, Card } from '@mui/material';
 import { Formik, Form, Field } from 'formik';
 import { TextField } from 'formik-mui';
-import { deleteCompany, getCompanies, getCompanyResource, getCompany } from '@/data/repository/company-repository';
+import { deleteCompany, getCompanies, getCompanyResource, getCompany } from '@/data/repository/company/company-repository';
 import { ResponseCompanies, Company } from '@/types/company';
 import { TableDataNotFound, TableLoading } from '../../shared/table/table';
 import EditIcon from '@mui/icons-material/Edit';
@@ -16,12 +16,14 @@ import { ModalConfirmation } from '@/components/shared/modal/modal';
 import { toast } from 'sonner';
 import { ResponseGeneralDynamicResource } from '@/types/general';
 import { getAccessToken } from '@/actions/auth/auth-action';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { SortableColumn } from '@/components/shared/table/column';
 import { VisuallyHiddenInput } from '@/components/shared/button/button';
 import { CreateCompanySchema, EditCompanySchema } from '@/schemas/company';
 import { addCompany, editCompany } from '@/actions/company/company-action';
 import { ImageAvatarPreview } from '@/components/shared/dialog/image-preview';
+import { getCompanyTranslation } from '@/data/repository/company/company-translation-repository';
+import { addCompanyTranslation, editCompanyTranslation } from '@/actions/company/company-translation-action';
 
 const modalStyle = {
   position: 'absolute',
@@ -35,6 +37,19 @@ const modalStyle = {
   p: 4,
 };
 
+const defaultForm = {
+  id: '',
+  code: '',
+  name: '',
+  name_2nd: '',
+  logo: '',
+  image: '',
+  is_active: false,
+  website_url: '',
+  address: '',
+  description: '',
+}
+
 const TableCompany = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, itemsPerPageList: number[] }) => {
   const [companies, setCompanies] = useState<ResponseCompanies | null>(null);
   const [resource, setResource] = useState<ResponseGeneralDynamicResource | null>(null);
@@ -45,36 +60,23 @@ const TableCompany = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const params = useParams<{ locale: string; }>();
   const page = searchParams.get('page') ?? 1;
   let limit = searchParams.get('limit') ?? itemsPerPage;
   const sortBy = searchParams.get('sort_by') ?? "name";
   const sortOrder = searchParams.get('sort_order') ?? "asc";
   // add and edit
   const [editId, setEditId] = useState('');
-  const [form, setForm] = useState({
-    id: '',
-    code: '',
-    name: '',
-    logo: '',
-    image: '',
-    is_active: false,
-    website_url: '',
-  })
+  const [editIdTranslation, setEditIdTranslation] = useState('');
+  const [form, setForm] = useState(defaultForm);
 
   const [openAddEdit, setOpenAddEdit] = React.useState(false);
   const handleOpenAddEdit = () => setOpenAddEdit(true);
   const handleCloseAddEdit = () => {
     setOpenAddEdit(false);
     setEditId('');
-    setForm({
-      id: '',
-      code: '',
-      name: '',
-      logo: '',
-      image: '',
-      website_url: '',
-      is_active: false,
-    })
+    setEditIdTranslation('');
+    setForm(defaultForm)
   };
   // view
   const [imageData, setImageData] = useState({
@@ -85,15 +87,7 @@ const TableCompany = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
   const handleOpenView = () => setOpenView(true);
   const handleCloseView = () => {
     setOpenView(false);
-    setForm({
-      id: '',
-      code: '',
-      name: '',
-      logo: '',
-      image: '',
-      website_url: '',
-      is_active: false,
-    })
+    setForm(defaultForm)
     setImageData({
       name: '',
       image_url: '',
@@ -147,20 +141,44 @@ const TableCompany = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
   };
 
   // handle edit
-  const handleEdit = (row: Company) => {
-    setForm({
-      id: row.id,
-      name: row.name,
-      code: row.code,
-      is_active: row.is_active ?? false,
-      image: '',
-      logo: '',
-      website_url: row.website_url ?? '',
-    })
-    setImageUrl(row.image_url);
-    setLogoUrl(row.logo_url);
-    setEditId(row.id);
-    handleOpenAddEdit();
+  const handleEdit = async (id: string) => {
+    const accessToken = await getAccessToken();
+    if (accessToken) {
+      const data = await getCompany(accessToken.value, id);
+      if (Object.keys(data.data).length > 0) {
+        const result = data.data;
+        setForm({
+          id: result.id,
+          name: result.name,
+          code: result.code,
+          is_active: result.is_active ?? false,
+          image: '',
+          logo: '',
+          website_url: result.website_url ?? '',
+          description: '',
+          name_2nd: '',
+          address: '',
+        })
+        setImageUrl(result.image_url);
+        setLogoUrl(result.logo_url);
+        setEditId(result.id);
+      }
+
+      const dataTranslation = await getCompanyTranslation(accessToken.value, id, params.locale);
+      if (Object.keys(dataTranslation.data).length > 0) {
+        const result = dataTranslation.data;
+        setForm(prevForm => ({
+          ...prevForm,
+          description: result.description ?? '',
+          name_2nd: result.name ?? '',
+          address: result.address ?? '',
+        }));
+        setEditIdTranslation(result.id);
+      } else {
+        setEditIdTranslation('');
+      }
+      handleOpenAddEdit();
+    }
   };
 
   // handle view
@@ -178,11 +196,25 @@ const TableCompany = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
           image: '',
           logo: '',
           website_url: result.website_url ?? '',
+          name_2nd: '',
+          address: '',
+          description: '',
         })
         setImageData({
           name: result.name,
           image_url: result.logo_url
         })
+
+        const dataTranslation = await getCompanyTranslation(accessToken.value, id, params.locale);
+        if (Object.keys(dataTranslation.data).length > 0) {
+          const result = dataTranslation.data;
+          setForm(prevForm => ({
+            ...prevForm,
+            description: result.description ?? '',
+            name_2nd: result.name ?? '',
+            address: result.address ?? '',
+          }));
+        }
       }
       handleOpenView();
     }
@@ -277,12 +309,31 @@ const TableCompany = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
 
                   const message = await editCompany(editId, formData);
                   if (message === 'SUCCESS') {
-                    fetchCompanies(Number(page), Number(limit),);
-                    handleCloseAddEdit()
-                    toast.success('company updated successfully');
-                  } else {
-                    toast.error(message)
+
+                    // company translation
+                    const formDataTranslation = new FormData();
+                    formDataTranslation.append('name', `${values.name_2nd}`);
+                    formDataTranslation.append('description', `${values.description}`);
+                    formDataTranslation.append('address', `${values.address}`);
+
+                    let message;
+                    if (editIdTranslation) {
+                      message = await editCompanyTranslation(editId, params.locale, formDataTranslation)
+                    } else {
+                      formDataTranslation.append('company_id', editId);
+                      formDataTranslation.append('language_id', params.locale);
+                      message = await addCompanyTranslation(formDataTranslation)
+                    }
+
+                    if (message === 'SUCCESS') {
+                      fetchCompanies(Number(page), Number(limit),);
+                      toast.success('company updated successfully');
+                      handleCloseAddEdit()
+                    } else {
+                      toast.error(message)
+                    }
                   }
+
                 } else { // create new company
                   const message = await addCompany(formData);
                   if (message === 'SUCCESS') {
@@ -319,6 +370,36 @@ const TableCompany = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
                         fullWidth
                       />
                     </Grid>
+                    {editId && <Grid item xs={12}>
+                      <Field
+                        id="companyName2NdInput"
+                        component={TextField}
+                        name="name_2nd"
+                        type="text"
+                        label="Name_2nd"
+                        fullWidth
+                      />
+                    </Grid>}
+                    {editId && <Grid item xs={12}>
+                      <Field
+                        id="companyDescriptionInput"
+                        component={TextField}
+                        name="description"
+                        type="text"
+                        label="Description"
+                        fullWidth
+                      />
+                    </Grid>}
+                    {editId && <Grid item xs={12}>
+                      <Field
+                        id="companyAddressInput"
+                        component={TextField}
+                        name="address"
+                        type="text"
+                        label="Address"
+                        fullWidth
+                      />
+                    </Grid>}
                     <Grid item xs={12}>
                       <Field
                         id="companyNameWebsiteUrl"
@@ -472,7 +553,7 @@ const TableCompany = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
       }
 
       <ModalAddEdit />
-      
+
       {/* modal view */}
       {resource?.data.includes('view') &&
         <Modal
@@ -502,6 +583,9 @@ const TableCompany = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
                       <Chip label="active" color="success"></Chip> :
                       <Chip label="disabled" color="error"></Chip>
                   }
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {form.name_2nd} {form.description} {form.address}
                 </Typography>
               </CardContent>
             </Card>
@@ -541,7 +625,7 @@ const TableCompany = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
                       <Button
                         color="warning"
                         onClick={() => {
-                          handleEdit(row);
+                          handleEdit(row.id);
                         }}
                       >
                         <EditIcon />
