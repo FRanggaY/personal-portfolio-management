@@ -1,6 +1,6 @@
 'use server';
 
-import { createSolution, updateSolution } from "@/data/repository/solution-repository";
+import { createSolution, updateSolution } from "@/data/repository/solution/solution-repository";
 import { revalidatePath } from "next/cache";
 import { getAccessToken } from "../auth/auth-action";
 

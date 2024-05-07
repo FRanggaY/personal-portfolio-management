@@ -12,6 +12,13 @@ export const EditSolutionSchema = Yup.object().shape({
     .min(1, 'Too Short!')
     .max(128, 'Too Long!')
     .required('Required'),
+  title_2nd: Yup.string()
+    .min(1, 'Too Short!')
+    .max(128, 'Too Long!')
+    .required('Required'),
+  description: Yup.string()
+    .max(512, 'Too Long!')
+    .nullable(),
   is_active: Yup.boolean()
     .nullable(),
 });

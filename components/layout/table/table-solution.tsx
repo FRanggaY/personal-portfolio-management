@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Button, TablePagination, Tooltip, Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Modal, Box, Typography, Grid, ButtonGroup, LinearProgress, FormGroup, FormControlLabel, Switch, CardContent, Card } from '@mui/material';
 import { Formik, Form, Field } from 'formik';
 import { TextField } from 'formik-mui';
-import { deleteSolution, getSolutions, getSolutionResource, getSolution } from '@/data/repository/solution-repository';
+import { deleteSolution, getSolutions, getSolutionResource, getSolution } from '@/data/repository/solution/solution-repository';
 import { ResponseSolutions, Solution } from '@/types/solution';
 import { TableDataNotFound, TableLoading } from '../../shared/table/table';
 import EditIcon from '@mui/icons-material/Edit';
@@ -16,12 +16,14 @@ import { ModalConfirmation } from '@/components/shared/modal/modal';
 import { toast } from 'sonner';
 import { ResponseGeneralDynamicResource } from '@/types/general';
 import { getAccessToken } from '@/actions/auth/auth-action';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { SortableColumn } from '@/components/shared/table/column';
 import { VisuallyHiddenInput } from '@/components/shared/button/button';
 import { CreateSolutionSchema, EditSolutionSchema } from '@/schemas/solution';
 import { addSolution, editSolution } from '@/actions/solution/solution-action';
 import { ImageAvatarPreview } from '@/components/shared/dialog/image-preview';
+import { getSolutionTranslation } from '@/data/repository/solution/solution-translation-repository';
+import { addSolutionTranslation, editSolutionTranslation } from '@/actions/solution/solution-translation-action';
 
 const modalStyle = {
   position: 'absolute',
@@ -35,6 +37,16 @@ const modalStyle = {
   p: 4,
 };
 
+const defaultForm = {
+  id: '',
+  title: '',
+  title_2nd: '',
+  logo: '',
+  image: '',
+  is_active: false,
+  description: '',
+}
+
 const TableSolution = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, itemsPerPageList: number[] }) => {
   const [solutions, setSolutions] = useState<ResponseSolutions | null>(null);
   const [resource, setResource] = useState<ResponseGeneralDynamicResource | null>(null);
@@ -45,32 +57,23 @@ const TableSolution = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: numbe
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const params = useParams<{ locale: string; }>();
   const page = searchParams.get('page') ?? 1;
   let limit = searchParams.get('limit') ?? itemsPerPage;
   const sortBy = searchParams.get('sort_by') ?? "name";
   const sortOrder = searchParams.get('sort_order') ?? "asc";
   // add and edit
   const [editId, setEditId] = useState('');
-  const [form, setForm] = useState({
-    id: '',
-    title: '',
-    logo: '',
-    image: '',
-    is_active: false,
-  })
+  const [editIdTranslation, setEditIdTranslation] = useState('');
+  const [form, setForm] = useState(defaultForm);
 
   const [openAddEdit, setOpenAddEdit] = React.useState(false);
   const handleOpenAddEdit = () => setOpenAddEdit(true);
   const handleCloseAddEdit = () => {
     setOpenAddEdit(false);
     setEditId('');
-    setForm({
-      id: '',
-      title: '',
-      logo: '',
-      image: '',
-      is_active: false,
-    })
+    setEditIdTranslation('');
+    setForm(defaultForm);
   };
   // view
   const [imageData, setImageData] = useState({
@@ -81,13 +84,7 @@ const TableSolution = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: numbe
   const handleOpenView = () => setOpenView(true);
   const handleCloseView = () => {
     setOpenView(false);
-    setForm({
-      id: '',
-      title: '',
-      logo: '',
-      image: '',
-      is_active: false,
-    })
+    setForm(defaultForm);
     setImageData({
       name: '',
       image_url: '',
@@ -141,18 +138,40 @@ const TableSolution = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: numbe
   };
 
   // handle edit
-  const handleEdit = (row: Solution) => {
-    setForm({
-      id: row.id,
-      title: row.title,
-      is_active: row.is_active ?? false,
-      image: '',
-      logo: '',
-    })
-    setImageUrl(row.image_url);
-    setLogoUrl(row.logo_url);
-    setEditId(row.id);
-    handleOpenAddEdit();
+  const handleEdit = async (id: string) => {
+    const accessToken = await getAccessToken();
+    if (accessToken) {
+      const data = await getSolution(accessToken.value, id);
+      if (Object.keys(data.data).length > 0) {
+        const result = data.data;
+        setForm({
+          id: result.id,
+          title: result.title,
+          title_2nd: '',
+          is_active: result.is_active ?? false,
+          image: '',
+          logo: '',
+          description: '',
+        })
+        setImageUrl(result.image_url);
+        setLogoUrl(result.logo_url);
+        setEditId(result.id);
+      }
+
+      const dataTranslation = await getSolutionTranslation(accessToken.value, id, params.locale);
+      if (Object.keys(dataTranslation.data).length > 0) {
+        const result = dataTranslation.data;
+        setForm(prevForm => ({
+          ...prevForm,
+          description: result.description ?? '',
+          title_2nd: result.title ?? '',
+        }));
+        setEditIdTranslation(result.id);
+      } else {
+        setEditIdTranslation('');
+      }
+      handleOpenAddEdit();
+    }
   };
 
   // handle view
@@ -165,14 +184,26 @@ const TableSolution = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: numbe
         setForm({
           id: result.id,
           title: result.title,
+          title_2nd: '',
           is_active: result.is_active ?? false,
           image: '',
           logo: '',
+          description: '',
         })
         setImageData({
           name: result.name,
           image_url: result.logo_url
         })
+      }
+      
+      const dataTranslation = await getSolutionTranslation(accessToken.value, id, params.locale);
+      if (Object.keys(dataTranslation.data).length > 0) {
+        const result = dataTranslation.data;
+        setForm(prevForm => ({
+          ...prevForm,
+          description: result.description ?? '',
+          title_2nd: result.title ?? '',
+        }))
       }
       handleOpenView();
     }
@@ -252,6 +283,7 @@ const TableSolution = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: numbe
             <Formik
               initialValues={form}
               validationSchema={editId ? CreateSolutionSchema : EditSolutionSchema}
+              enableReinitialize={true}
               onSubmit={async (values, { setSubmitting }) => {
                 setSubmitting(false);
 
@@ -265,9 +297,30 @@ const TableSolution = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: numbe
 
                   const message = await editSolution(editId, formData);
                   if (message === 'SUCCESS') {
-                    fetchSolutions(Number(page), Number(limit),);
-                    handleCloseAddEdit()
-                    toast.success('solution updated successfully');
+
+                    // solution translation
+                    const formDataTranslation = new FormData();
+                    formDataTranslation.append('title', `${values.title_2nd}`);
+                    formDataTranslation.append('description', `${values.description}`);
+
+                    let message;
+                    if (editIdTranslation) {
+                      message = await editSolutionTranslation(editId, params.locale, formDataTranslation)
+                    } else {
+                      formDataTranslation.append('solution_id', editId);
+                      formDataTranslation.append('language_id', params.locale);
+                      message = await addSolutionTranslation(formDataTranslation)
+                    }
+
+                    if (message === 'SUCCESS') {
+                      fetchSolutions(Number(page), Number(limit),);
+                      toast.success('solution updated successfully');
+                      handleCloseAddEdit()
+                    } else {
+                      toast.error(message)
+                    }
+
+
                   } else {
                     toast.error(message)
                   }
@@ -297,6 +350,26 @@ const TableSolution = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: numbe
                         fullWidth
                       />
                     </Grid>
+                    {editId && <Grid item xs={12}>
+                      <Field
+                        id="solutionTitle2NdInput"
+                        component={TextField}
+                        name="title_2nd"
+                        type="text"
+                        label="Title_2nd"
+                        fullWidth
+                      />
+                    </Grid>}
+                    {editId && <Grid item xs={12}>
+                      <Field
+                        id="solutionDescriptionInput"
+                        component={TextField}
+                        name="description"
+                        type="text"
+                        label="Description"
+                        fullWidth
+                      />
+                    </Grid>}
                     {editId && <Grid item xs={12}>
                       <FormGroup>
                         <FormControlLabel control={
@@ -441,7 +514,7 @@ const TableSolution = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: numbe
       }
 
       <ModalAddEdit />
-      
+
       {/* modal view */}
       {resource?.data.includes('view') &&
         <Modal
@@ -468,6 +541,9 @@ const TableSolution = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: numbe
                       <Chip label="active" color="success"></Chip> :
                       <Chip label="disabled" color="error"></Chip>
                   }
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {form.title_2nd} {form.description}
                 </Typography>
               </CardContent>
             </Card>
@@ -506,7 +582,7 @@ const TableSolution = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: numbe
                       <Button
                         color="warning"
                         onClick={() => {
-                          handleEdit(row);
+                          handleEdit(row.id);
                         }}
                       >
                         <EditIcon />
