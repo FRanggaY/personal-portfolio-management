@@ -251,7 +251,7 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Formik
               initialValues={form}
-              validationSchema={editId ? CreateProjectSchema : EditProjectSchema}
+              validationSchema={editId ? EditProjectSchema : CreateProjectSchema }
               onSubmit={async (values, { setSubmitting }) => {
                 setSubmitting(false);
 

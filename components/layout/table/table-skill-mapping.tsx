@@ -283,7 +283,7 @@ const TableSkillMapping = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: n
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Formik
               initialValues={form}
-              validationSchema={editId ? CreateSkillMappingSchema : EditSkillMappingSchema}
+              validationSchema={editId ? EditSkillMappingSchema : CreateSkillMappingSchema}
               onSubmit={async (values, { setSubmitting }) => {
                 setSubmitting(false);
 

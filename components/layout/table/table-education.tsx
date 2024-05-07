@@ -298,7 +298,7 @@ const TableEducation = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: numb
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Formik
               initialValues={form}
-              validationSchema={editId ? CreateEducationSchema : EditEducationSchema}
+              validationSchema={editId ? EditEducationSchema : CreateEducationSchema}
               onSubmit={async (values, { setSubmitting }) => {
                 setSubmitting(false);
 

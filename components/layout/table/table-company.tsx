@@ -293,7 +293,7 @@ const TableCompany = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
           <Grid container spacing={2} sx={{ mt: 1 }}>
             <Formik
               initialValues={form}
-              validationSchema={editId ? CreateCompanySchema : EditCompanySchema}
+              validationSchema={editId ? EditCompanySchema : CreateCompanySchema}
               onSubmit={async (values, { setSubmitting }) => {
                 setSubmitting(false);
 
