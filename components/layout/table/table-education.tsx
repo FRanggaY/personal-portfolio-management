@@ -1,10 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Button, TablePagination, Tooltip, Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Modal, Box, Typography, Grid, LinearProgress, FormGroup, FormControlLabel, Switch, CardContent, Card, FormControl, InputLabel, Select, MenuItem, FormHelperText } from '@mui/material';
-import { Formik, Form, Field } from 'formik';
-import { TextField } from 'formik-mui';
-import { deleteEducation, getEducations, getEducationResource, getEducation } from '@/data/repository/education-repository';
+import { Button, TablePagination, Tooltip, Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import { deleteEducation, getEducations, getEducationResource, getEducation } from '@/data/repository/education/education-repository';
 import { ResponseEducations, Education } from '@/types/education';
 import { TableDataNotFound, TableLoading } from '../../shared/table/table';
 import EditIcon from '@mui/icons-material/Edit';
@@ -14,12 +12,15 @@ import { ModalConfirmation } from '@/components/shared/modal/modal';
 import { toast } from 'sonner';
 import { ResponseGeneralDynamicResource } from '@/types/general';
 import { getAccessToken } from '@/actions/auth/auth-action';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { SortableColumn } from '@/components/shared/table/column';
-import { CreateEducationSchema, EditEducationSchema } from '@/schemas/education';
+import { defaultFormEducation } from '@/schemas/education';
 import { addEducation, editEducation } from '@/actions/education/education-action';
 import { School, ResponseSchools } from '@/types/school';
 import { getSchools } from '@/data/repository/school-repository';
+import { getEducationTranslation } from '@/data/repository/education/education-translation-repository';
+import { ModalAddEditEducation, ModalViewEducation } from '../modal/modal-education';
+import { addEducationTranslation, editEducationTranslation } from '@/actions/education/education-translation-action';
 
 const modalStyle = {
   position: 'absolute',
@@ -44,60 +45,30 @@ const TableEducation = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: numb
   const [schools, setSchools] = useState<School[] | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const params = useParams<{ locale: string; }>();
   const page = searchParams.get('page') ?? 1;
   let limit = searchParams.get('limit') ?? itemsPerPage;
   const sortBy = searchParams.get('sort_by') ?? "name";
   const sortOrder = searchParams.get('sort_order') ?? "asc";
   // add and edit
   const [editId, setEditId] = useState('');
-  const [form, setForm] = useState({
-    id: '',
-    school_id: '',
-    school: {
-      id: '',
-      name: '',
-    },
-    title: '',
-    started_at: '',
-    finished_at: '',
-    is_active: false,
-  })
+  const [editIdTranslation, setEditIdTranslation] = useState('');
+  const [form, setForm] = useState(defaultFormEducation)
 
   const [openAddEdit, setOpenAddEdit] = React.useState(false);
   const handleOpenAddEdit = () => setOpenAddEdit(true);
   const handleCloseAddEdit = () => {
     setOpenAddEdit(false);
     setEditId('');
-    setForm({
-      id: '',
-      school_id: '',
-      school: {
-        id: '',
-        name: '',
-      },
-      title: '',
-      started_at: '',
-      finished_at: '',
-      is_active: false,
-    })
+    setEditIdTranslation('');
+    setForm(defaultFormEducation)
   };
   // view
   const [openView, setOpenView] = React.useState(false);
   const handleOpenView = () => setOpenView(true);
   const handleCloseView = () => {
     setOpenView(false);
-    setForm({
-      id: '',
-      school_id: '',
-      school: {
-        id: '',
-        name: '',
-      },
-      title: '',
-      started_at: '',
-      finished_at: '',
-      is_active: false,
-    })
+    setForm(defaultFormEducation)
   };
 
   // put default to base limit if that outside range
@@ -186,21 +157,47 @@ const TableEducation = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: numb
   };
 
   // handle edit
-  const handleEdit = (row: Education) => {
-    setForm({
-      id: row.id,
-      school_id: row.school.id,
-      school: {
-        id: '',
-        name: '',
-      },
-      title: row.title,
-      started_at: row.started_at,
-      finished_at: row.finished_at,
-      is_active: row.is_active ?? false,
-    })
-    setEditId(row.id);
-    handleOpenAddEdit();
+  const handleEdit = async (id: string) => {
+    const accessToken = await getAccessToken();
+    if (accessToken) {
+      const data = await getEducation(accessToken.value, id);
+      if (Object.keys(data.data).length > 0) {
+        const result = data.data;
+        setForm({
+          id: result.id,
+          school_id: result.school.id,
+          school: {
+            id: '',
+            name: '',
+          },
+          title: result.title,
+          title_2nd: '',
+          started_at: result.started_at,
+          finished_at: result.finished_at,
+          is_active: result.is_active ?? false,
+          field_of_study: '',
+          degree: '',
+          description: '',
+        })
+        setEditId(result.id);
+      }
+
+      const dataTranslation = await getEducationTranslation(accessToken.value, id, params.locale);
+      if (Object.keys(dataTranslation.data).length > 0) {
+        const result = dataTranslation.data;
+        setForm(prevForm => ({
+          ...prevForm,
+          description: result.description ?? '',
+          title_2nd: result.title ?? '',
+          degree: result.degree ?? '',
+          field_of_study: result.degree ?? '',
+        }));
+        setEditIdTranslation(result.id);
+      } else {
+        setEditIdTranslation('');
+      }
+      handleOpenAddEdit();
+    }
   };
 
   // handle view
@@ -215,10 +212,25 @@ const TableEducation = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: numb
           school_id: result.school.id,
           school: result.school,
           title: result.title,
+          title_2nd: '',
           started_at: result.started_at,
           finished_at: result.finished_at,
           is_active: result.is_active ?? false,
+          field_of_study: '',
+          degree: '',
+          description: '',
         })
+      }
+      const dataTranslation = await getEducationTranslation(accessToken.value, id, params.locale);
+      if (Object.keys(dataTranslation.data).length > 0) {
+        const result = dataTranslation.data;
+        setForm(prevForm => ({
+          ...prevForm,
+          description: result.description ?? '',
+          title_2nd: result.title ?? '',
+          degree: result.degree ?? '',
+          field_of_study: result.degree ?? '',
+        }));
       }
       handleOpenView();
     }
@@ -283,142 +295,6 @@ const TableEducation = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: numb
     router.push(newPath);
   };
 
-  const ModalAddEdit = () => {
-    return (
-      <Modal
-        open={openAddEdit}
-        onClose={handleCloseAddEdit}
-        aria-labelledby="modal-education-title"
-        aria-describedby="modal-education-description"
-      >
-        <Box sx={modalStyle}>
-          <Typography id="modal-education-title" variant="h6" component="h2">
-            {editId ? 'Edit Education' : 'Add Education'}
-          </Typography>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Formik
-              initialValues={form}
-              validationSchema={editId ? EditEducationSchema : CreateEducationSchema}
-              onSubmit={async (values, { setSubmitting }) => {
-                setSubmitting(false);
-
-                const formData = new FormData();
-                formData.append('school_id', `${values.school_id}`);
-                formData.append('title', `${values.title}`);
-                formData.append('started_at', `${values.started_at}`);
-                formData.append('finished_at', `${values.finished_at}`);
-                if (editId) { // update education
-                  formData.append('is_active', `${values.is_active}`);
-
-                  const message = await editEducation(editId, formData);
-                  if (message === 'SUCCESS') {
-                    fetchEducations(Number(page), Number(limit),);
-                    handleCloseAddEdit()
-                    toast.success('education updated successfully');
-                  } else {
-                    toast.error(message)
-                  }
-                } else { // create new education
-                  const message = await addEducation(formData);
-                  if (message === 'SUCCESS') {
-                    fetchEducations(Number(page), Number(limit),);
-                    handleCloseAddEdit()
-                    toast.success('education created successfully');
-                  } else {
-                    toast.error(message)
-                  }
-                }
-
-              }}
-            >
-              {({ submitForm, isSubmitting, setFieldValue, values, touched, errors }) => (
-                <Form>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12}>
-                      <FormControl fullWidth>
-                        <InputLabel id="select-school_id-label">School</InputLabel>
-                        <Select
-                          labelId="select-school_id-label"
-                          id="select-school_id"
-                          value={values.school_id}
-                          label="School"
-                          onChange={(event) => {
-                            setFieldValue("school_id", event.target.value);
-                          }}
-                          error={touched.school_id && Boolean(errors.school_id)}
-                        >
-                          {
-                            schools?.map((data: School) => {
-                              return <MenuItem value={data.id} key={data.id}>{data.name}</MenuItem>
-                            })
-                          }
-                        </Select>
-                      </FormControl>
-                      <FormHelperText>{touched.school_id && errors.school_id}</FormHelperText>
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Field
-                        id="educationTitleInput"
-                        component={TextField}
-                        name="title"
-                        type="text"
-                        label="Title"
-                        fullWidth
-                      />
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Field
-                        id="educationStartedAtInput"
-                        component={TextField}
-                        name="started_at"
-                        type="date"
-                        fullWidth
-                      />
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Field
-                        id="educationfinishedAtInput"
-                        component={TextField}
-                        name="finished_at"
-                        type="date"
-                        fullWidth
-                      />
-                    </Grid>
-                    {editId && <Grid item xs={12}>
-                      <FormGroup>
-                        <FormControlLabel control={
-                          <Switch
-                            name="is_active"
-                            value={values.is_active}
-                            checked={values.is_active === true}
-                            onChange={(event, checked) => {
-                              setFieldValue("is_active", checked);
-                            }}
-                          />
-                        } label="Active" />
-                      </FormGroup>
-                    </Grid>}
-                  </Grid>
-                  {isSubmitting && <LinearProgress />}
-                  <br />
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    fullWidth
-                    disabled={isSubmitting}
-                    onClick={submitForm}
-                  >
-                    Submit
-                  </Button>
-                </Form>
-              )}
-            </Formik>
-          </Grid>
-        </Box>
-      </Modal>
-    )
-  }
-
   if (loading) {
     // Show skeleton loading while data is being fetched
     return (
@@ -443,7 +319,23 @@ const TableEducation = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: numb
           Create
         </Button>
       }
-      <ModalAddEdit />
+      <ModalAddEditEducation
+        openAddEdit={openAddEdit}
+        handleCloseAddEdit={handleCloseAddEdit}
+        editId={editId}
+        editIdTranslation={editIdTranslation}
+        params={params}
+        modalStyle={modalStyle}
+        form={form}
+        editEducation={editEducation}
+        editEducationTranslation={editEducationTranslation}
+        addEducation={addEducation}
+        addEducationTranslation={addEducationTranslation}
+        fetchEducations={fetchEducations}
+        page={Number(page)}
+        limit={Number(limit)}
+        schools={schools}
+      />
       <TableDataNotFound />
     </>;
   }
@@ -466,36 +358,32 @@ const TableEducation = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: numb
         </Button>
       }
 
-      <ModalAddEdit />
+      <ModalAddEditEducation
+        openAddEdit={openAddEdit}
+        handleCloseAddEdit={handleCloseAddEdit}
+        editId={editId}
+        editIdTranslation={editIdTranslation}
+        params={params}
+        modalStyle={modalStyle}
+        form={form}
+        editEducation={editEducation}
+        editEducationTranslation={editEducationTranslation}
+        addEducation={addEducation}
+        addEducationTranslation={addEducationTranslation}
+        fetchEducations={fetchEducations}
+        page={Number(page)}
+        limit={Number(limit)}
+        schools={schools}
+      />
 
       {/* modal view */}
       {resource?.data.includes('view') &&
-        <Modal
-          open={openView}
-          onClose={handleCloseView}
-          aria-labelledby="modal-view-education-title"
-          aria-describedby="modal-view-education-description"
-        >
-          <Box sx={modalStyle}>
-            <Typography id="modal-view-education-title" variant="h6" component="h2">
-              View Education
-            </Typography>
-            <Card sx={{ mt: 1 }}>
-              <CardContent>
-                <Typography sx={{ fontSize: 14, marginTop: '10px' }} color="text.secondary" gutterBottom>
-                  {form.school.name} - ({form.started_at}) - ({form.finished_at})
-                </Typography>
-                <Typography variant="h5" gutterBottom>
-                  {form.title} {
-                    form.is_active ?
-                      <Chip label="active" color="success"></Chip> :
-                      <Chip label="disabled" color="error"></Chip>
-                  }
-                </Typography>
-              </CardContent>
-            </Card>
-          </Box>
-        </Modal>
+        <ModalViewEducation
+          openView={openView}
+          handleCloseView={handleCloseView}
+          modalStyle={modalStyle}
+          form={form}
+        />
       }
 
 
@@ -532,7 +420,7 @@ const TableEducation = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: numb
                       <Button
                         color="warning"
                         onClick={() => {
-                          handleEdit(row);
+                          handleEdit(row.id);
                         }}
                       >
                         <EditIcon />

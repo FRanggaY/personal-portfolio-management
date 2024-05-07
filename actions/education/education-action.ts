@@ -1,6 +1,6 @@
 'use server';
 
-import { createEducation, updateEducation } from "@/data/repository/education-repository";
+import { createEducation, updateEducation } from "@/data/repository/education/education-repository";
 import { revalidatePath } from "next/cache";
 import { getAccessToken } from "../auth/auth-action";
 
