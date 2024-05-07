@@ -1,10 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Button, TablePagination, Tooltip, Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Modal, Box, Typography, Grid, LinearProgress, FormGroup, FormControlLabel, Switch, CardContent, Card, FormControl, InputLabel, Select, MenuItem, FormHelperText } from '@mui/material';
-import { Formik, Form, Field } from 'formik';
-import { TextField } from 'formik-mui';
-import { deleteExperience, getExperiences, getExperienceResource, getExperience } from '@/data/repository/experience-repository';
+import { Button, TablePagination, Tooltip, Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import { deleteExperience, getExperiences, getExperienceResource, getExperience } from '@/data/repository/experience/experience-repository';
 import { ResponseExperiences, Experience } from '@/types/experience';
 import { TableDataNotFound, TableLoading } from '../../shared/table/table';
 import EditIcon from '@mui/icons-material/Edit';
@@ -14,12 +12,15 @@ import { ModalConfirmation } from '@/components/shared/modal/modal';
 import { toast } from 'sonner';
 import { ResponseGeneralDynamicResource } from '@/types/general';
 import { getAccessToken } from '@/actions/auth/auth-action';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { SortableColumn } from '@/components/shared/table/column';
-import { CreateExperienceSchema, EditExperienceSchema } from '@/schemas/experience';
+import { defaultFormExperience } from '@/schemas/experience';
 import { addExperience, editExperience } from '@/actions/experience/experience-action';
 import { Company, ResponseCompanies } from '@/types/company';
 import { getCompanies } from '@/data/repository/company/company-repository';
+import { ModalAddEditExperience, ModalViewExperience } from '../modal/modal-experience';
+import { addExperienceTranslation, editExperienceTranslation } from '@/actions/experience/experience-translation-action';
+import { getExperienceTranslation } from '@/data/repository/experience/experience-translation-repository';
 
 const modalStyle = {
   position: 'absolute',
@@ -44,60 +45,30 @@ const TableExperience = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: num
   const [companies, setCompanies] = useState<Company[] | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const params = useParams<{ locale: string; }>();
   const page = searchParams.get('page') ?? 1;
   let limit = searchParams.get('limit') ?? itemsPerPage;
   const sortBy = searchParams.get('sort_by') ?? "name";
   const sortOrder = searchParams.get('sort_order') ?? "asc";
   // add and edit
   const [editId, setEditId] = useState('');
-  const [form, setForm] = useState({
-    id: '',
-    company_id: '',
-    company: {
-      id: '',
-      name: '',
-    },
-    title: '',
-    started_at: '',
-    finished_at: '',
-    is_active: false,
-  })
+  const [editIdTranslation, setEditIdTranslation] = useState('');
+  const [form, setForm] = useState(defaultFormExperience)
 
   const [openAddEdit, setOpenAddEdit] = React.useState(false);
   const handleOpenAddEdit = () => setOpenAddEdit(true);
   const handleCloseAddEdit = () => {
     setOpenAddEdit(false);
     setEditId('');
-    setForm({
-      id: '',
-      company_id: '',
-      company: {
-        id: '',
-        name: '',
-      },
-      title: '',
-      started_at: '',
-      finished_at: '',
-      is_active: false,
-    })
+    setEditIdTranslation('');
+    setForm(defaultFormExperience)
   };
   // view
   const [openView, setOpenView] = React.useState(false);
   const handleOpenView = () => setOpenView(true);
   const handleCloseView = () => {
     setOpenView(false);
-    setForm({
-      id: '',
-      company_id: '',
-      company: {
-        id: '',
-        name: '',
-      },
-      title: '',
-      started_at: '',
-      finished_at: '',
-      is_active: false,
-    })
+    setForm(defaultFormExperience)
   };
 
   // put default to base limit if that outside range
@@ -186,21 +157,49 @@ const TableExperience = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: num
   };
 
   // handle edit
-  const handleEdit = (row: Experience) => {
-    setForm({
-      id: row.id,
-      company_id: row.company.id,
-      company: {
-        id: '',
-        name: '',
-      },
-      title: row.title,
-      started_at: row.started_at,
-      finished_at: row.finished_at,
-      is_active: row.is_active ?? false,
-    })
-    setEditId(row.id);
-    handleOpenAddEdit();
+  const handleEdit = async (id: string) => {
+    const accessToken = await getAccessToken();
+    if (accessToken) {
+      const data = await getExperience(accessToken.value, id);
+      if (Object.keys(data.data).length > 0) {
+        const result = data.data;
+        setForm({
+          id: result.id,
+          company_id: result.company.id,
+          company: {
+            id: '',
+            name: '',
+          },
+          title: result.title,
+          title_2nd: '',
+          started_at: result.started_at,
+          finished_at: result.finished_at,
+          is_active: result.is_active ?? false,
+          employee_type: '',
+          location: '',
+          location_type: '',
+          description: '',
+        })
+        setEditId(result.id);
+      }
+
+      const dataTranslation = await getExperienceTranslation(accessToken.value, id, params.locale);
+      if (Object.keys(dataTranslation.data).length > 0) {
+        const result = dataTranslation.data;
+        setForm(prevForm => ({
+          ...prevForm,
+          description: result.description ?? '',
+          title_2nd: result.title ?? '',
+          employee_type: result.employee_type ?? '',
+          location: result.location ?? '',
+          location_type: result.location_type ?? '',
+        }));
+        setEditIdTranslation(result.id);
+      } else {
+        setEditIdTranslation('');
+      }
+      handleOpenAddEdit();
+    }
   };
 
   // handle view
@@ -212,13 +211,30 @@ const TableExperience = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: num
         const result = data.data;
         setForm({
           id: result.id,
+          title_2nd: '',
           company_id: result.company.id,
           company: result.company,
           title: result.title,
           started_at: result.started_at,
           finished_at: result.finished_at,
           is_active: result.is_active ?? false,
+          employee_type: '',
+          location: '',
+          location_type: '',
+          description: '',
         })
+      }
+      const dataTranslation = await getExperienceTranslation(accessToken.value, id, params.locale);
+      if (Object.keys(dataTranslation.data).length > 0) {
+        const result = dataTranslation.data;
+        setForm(prevForm => ({
+          ...prevForm,
+          description: result.description ?? '',
+          title_2nd: result.title ?? '',
+          employee_type: result.employee_type ?? '',
+          location: result.location ?? '',
+          location_type: result.location_type ?? '',
+        }));
       }
       handleOpenView();
     }
@@ -283,141 +299,6 @@ const TableExperience = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: num
     router.push(newPath);
   };
 
-  const ModalAddEdit = () => {
-    return (
-      <Modal
-        open={openAddEdit}
-        onClose={handleCloseAddEdit}
-        aria-labelledby="modal-experience-title"
-        aria-describedby="modal-experience-description"
-      >
-        <Box sx={modalStyle}>
-          <Typography id="modal-experience-title" variant="h6" component="h2">
-            {editId ? 'Edit Experience' : 'Add Experience'}
-          </Typography>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Formik
-              initialValues={form}
-              validationSchema={editId ? EditExperienceSchema : CreateExperienceSchema}
-              onSubmit={async (values, { setSubmitting }) => {
-                setSubmitting(false);
-
-                const formData = new FormData();
-                formData.append('company_id', `${values.company_id}`);
-                formData.append('title', `${values.title}`);
-                formData.append('started_at', `${values.started_at}`);
-                formData.append('finished_at', `${values.finished_at}`);
-                if (editId) { // update experience
-                  formData.append('is_active', `${values.is_active}`);
-
-                  const message = await editExperience(editId, formData);
-                  if (message === 'SUCCESS') {
-                    fetchExperiences(Number(page), Number(limit),);
-                    handleCloseAddEdit()
-                    toast.success('experience updated successfully');
-                  } else {
-                    toast.error(message)
-                  }
-                } else { // create new experience
-                  const message = await addExperience(formData);
-                  if (message === 'SUCCESS') {
-                    fetchExperiences(Number(page), Number(limit),);
-                    handleCloseAddEdit()
-                    toast.success('experience created successfully');
-                  } else {
-                    toast.error(message)
-                  }
-                }
-
-              }}
-            >
-              {({ submitForm, isSubmitting, setFieldValue, values, touched, errors }) => (
-                <Form>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12}>
-                      <FormControl fullWidth>
-                        <InputLabel id="select-company_id-label">Company</InputLabel>
-                        <Select
-                          labelId="select-company_id-label"
-                          id="select-company_id"
-                          value={values.company_id}
-                          label="Company"
-                          onChange={(event) => {
-                            setFieldValue("company_id", event.target.value);
-                          }}
-                          error={touched.company_id && Boolean(errors.company_id)}
-                        >
-                          {
-                            companies?.map((data: Company) => {
-                              return <MenuItem value={data.id} key={data.id}>{data.name}</MenuItem>
-                            })
-                          }
-                        </Select>
-                      </FormControl>
-                      <FormHelperText>{touched.company_id && errors.company_id}</FormHelperText>
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Field
-                        id="experienceTitleInput"
-                        component={TextField}
-                        name="title"
-                        type="text"
-                        label="Title"
-                        fullWidth
-                      />
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Field
-                        id="experienceStartedAtInput"
-                        component={TextField}
-                        name="started_at"
-                        type="date"
-                        fullWidth
-                      />
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Field
-                        id="experiencefinishedAtInput"
-                        component={TextField}
-                        name="finished_at"
-                        type="date"
-                        fullWidth
-                      />
-                    </Grid>
-                    {editId && <Grid item xs={12}>
-                      <FormGroup>
-                        <FormControlLabel control={
-                          <Switch
-                            name="is_active"
-                            value={values.is_active}
-                            checked={values.is_active === true}
-                            onChange={(event, checked) => {
-                              setFieldValue("is_active", checked);
-                            }}
-                          />
-                        } label="Active" />
-                      </FormGroup>
-                    </Grid>}
-                  </Grid>
-                  {isSubmitting && <LinearProgress />}
-                  <br />
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    fullWidth
-                    disabled={isSubmitting}
-                    onClick={submitForm}
-                  >
-                    Submit
-                  </Button>
-                </Form>
-              )}
-            </Formik>
-          </Grid>
-        </Box>
-      </Modal>
-    )
-  }
 
   if (loading) {
     // Show skeleton loading while data is being fetched
@@ -443,7 +324,23 @@ const TableExperience = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: num
           Create
         </Button>
       }
-      <ModalAddEdit />
+      <ModalAddEditExperience
+        openAddEdit={openAddEdit}
+        handleCloseAddEdit={handleCloseAddEdit}
+        editId={editId}
+        editIdTranslation={editIdTranslation}
+        params={params}
+        modalStyle={modalStyle}
+        form={form}
+        editExperience={editExperience}
+        editExperienceTranslation={editExperienceTranslation}
+        addExperience={addExperience}
+        addExperienceTranslation={addExperienceTranslation}
+        fetchExperiences={fetchExperiences}
+        page={Number(page)}
+        limit={Number(limit)}
+        companies={companies}
+      />
       <TableDataNotFound />
     </>;
   }
@@ -466,36 +363,32 @@ const TableExperience = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: num
         </Button>
       }
 
-      <ModalAddEdit />
+      <ModalAddEditExperience
+        openAddEdit={openAddEdit}
+        handleCloseAddEdit={handleCloseAddEdit}
+        editId={editId}
+        editIdTranslation={editIdTranslation}
+        params={params}
+        modalStyle={modalStyle}
+        form={form}
+        editExperience={editExperience}
+        editExperienceTranslation={editExperienceTranslation}
+        addExperience={addExperience}
+        addExperienceTranslation={addExperienceTranslation}
+        fetchExperiences={fetchExperiences}
+        page={Number(page)}
+        limit={Number(limit)}
+        companies={companies}
+      />
 
       {/* modal view */}
       {resource?.data.includes('view') &&
-        <Modal
-          open={openView}
-          onClose={handleCloseView}
-          aria-labelledby="modal-view-experience-title"
-          aria-describedby="modal-view-experience-description"
-        >
-          <Box sx={modalStyle}>
-            <Typography id="modal-view-experience-title" variant="h6" component="h2">
-              View Experience
-            </Typography>
-            <Card sx={{ mt: 1 }}>
-              <CardContent>
-                <Typography sx={{ fontSize: 14, marginTop: '10px' }} color="text.secondary" gutterBottom>
-                  {form.company.name} - ({form.started_at}) - ({form.finished_at})
-                </Typography>
-                <Typography variant="h5" gutterBottom>
-                  {form.title} {
-                    form.is_active ?
-                      <Chip label="active" color="success"></Chip> :
-                      <Chip label="disabled" color="error"></Chip>
-                  }
-                </Typography>
-              </CardContent>
-            </Card>
-          </Box>
-        </Modal>
+        <ModalViewExperience
+          openView={openView}
+          handleCloseView={handleCloseView}
+          modalStyle={modalStyle}
+          form={form}
+        />
       }
 
 
@@ -532,7 +425,7 @@ const TableExperience = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: num
                       <Button
                         color="warning"
                         onClick={() => {
-                          handleEdit(row);
+                          handleEdit(row.id);
                         }}
                       >
                         <EditIcon />

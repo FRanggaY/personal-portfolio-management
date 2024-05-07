@@ -1,6 +1,6 @@
 'use server';
 
-import { createExperience, updateExperience } from "@/data/repository/experience-repository";
+import { createExperience, updateExperience } from "@/data/repository/experience/experience-repository";
 import { revalidatePath } from "next/cache";
 import { getAccessToken } from "../auth/auth-action";
 
