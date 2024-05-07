@@ -1,29 +1,24 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Button, TablePagination, Tooltip, Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Modal, Box, Typography, Grid, ButtonGroup, LinearProgress, FormGroup, FormControlLabel, Switch, CardContent, Card } from '@mui/material';
-import { Formik, Form, Field } from 'formik';
-import { TextField } from 'formik-mui';
+import { Button, TablePagination, Tooltip, Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow} from '@mui/material';
 import { deleteCompany, getCompanies, getCompanyResource, getCompany } from '@/data/repository/company/company-repository';
 import { ResponseCompanies, Company } from '@/types/company';
 import { TableDataNotFound, TableLoading } from '../../shared/table/table';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import Image from "next/image";
 import { ModalConfirmation } from '@/components/shared/modal/modal';
 import { toast } from 'sonner';
 import { ResponseGeneralDynamicResource } from '@/types/general';
 import { getAccessToken } from '@/actions/auth/auth-action';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { SortableColumn } from '@/components/shared/table/column';
-import { VisuallyHiddenInput } from '@/components/shared/button/button';
-import { CreateCompanySchema, EditCompanySchema } from '@/schemas/company';
+import { defaultFormCompany } from '@/schemas/company';
 import { addCompany, editCompany } from '@/actions/company/company-action';
-import { ImageAvatarPreview } from '@/components/shared/dialog/image-preview';
 import { getCompanyTranslation } from '@/data/repository/company/company-translation-repository';
 import { addCompanyTranslation, editCompanyTranslation } from '@/actions/company/company-translation-action';
+import { ModalAddEditCompany, ModalViewCompany } from '../modal/modal-company';
 
 const modalStyle = {
   position: 'absolute',
@@ -36,19 +31,6 @@ const modalStyle = {
   boxShadow: 24,
   p: 4,
 };
-
-const defaultForm = {
-  id: '',
-  code: '',
-  name: '',
-  name_2nd: '',
-  logo: '',
-  image: '',
-  is_active: false,
-  website_url: '',
-  address: '',
-  description: '',
-}
 
 const TableCompany = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, itemsPerPageList: number[] }) => {
   const [companies, setCompanies] = useState<ResponseCompanies | null>(null);
@@ -68,7 +50,7 @@ const TableCompany = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
   // add and edit
   const [editId, setEditId] = useState('');
   const [editIdTranslation, setEditIdTranslation] = useState('');
-  const [form, setForm] = useState(defaultForm);
+  const [form, setForm] = useState(defaultFormCompany);
 
   const [openAddEdit, setOpenAddEdit] = React.useState(false);
   const handleOpenAddEdit = () => setOpenAddEdit(true);
@@ -76,7 +58,7 @@ const TableCompany = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
     setOpenAddEdit(false);
     setEditId('');
     setEditIdTranslation('');
-    setForm(defaultForm)
+    setForm(defaultFormCompany)
   };
   // view
   const [imageData, setImageData] = useState({
@@ -87,7 +69,7 @@ const TableCompany = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
   const handleOpenView = () => setOpenView(true);
   const handleCloseView = () => {
     setOpenView(false);
-    setForm(defaultForm)
+    setForm(defaultFormCompany)
     setImageData({
       name: '',
       image_url: '',
@@ -278,229 +260,6 @@ const TableCompany = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
     router.push(newPath);
   };
 
-  const ModalAddEdit = () => {
-    return (
-      <Modal
-        open={openAddEdit}
-        onClose={handleCloseAddEdit}
-        aria-labelledby="modal-company-title"
-        aria-describedby="modal-company-description"
-      >
-        <Box sx={modalStyle}>
-          <Typography id="modal-company-title" variant="h6" component="h2">
-            {editId ? 'Edit Company' : 'Add Company'}
-          </Typography>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Formik
-              initialValues={form}
-              validationSchema={editId ? EditCompanySchema : CreateCompanySchema}
-              onSubmit={async (values, { setSubmitting }) => {
-                setSubmitting(false);
-
-                const formData = new FormData();
-                formData.append('code', `${values.code}`);
-                formData.append('name', `${values.name}`);
-                formData.append('website_url', `${values.website_url}`);
-                formData.append('image', values.image);
-                formData.append('logo', values.logo);
-
-                if (editId) { // update company
-                  formData.append('is_active', `${values.is_active}`);
-
-                  const message = await editCompany(editId, formData);
-                  if (message === 'SUCCESS') {
-
-                    // company translation
-                    const formDataTranslation = new FormData();
-                    formDataTranslation.append('name', `${values.name_2nd}`);
-                    formDataTranslation.append('description', `${values.description}`);
-                    formDataTranslation.append('address', `${values.address}`);
-
-                    let message;
-                    if (editIdTranslation) {
-                      message = await editCompanyTranslation(editId, params.locale, formDataTranslation)
-                    } else {
-                      formDataTranslation.append('company_id', editId);
-                      formDataTranslation.append('language_id', params.locale);
-                      message = await addCompanyTranslation(formDataTranslation)
-                    }
-
-                    if (message === 'SUCCESS') {
-                      fetchCompanies(Number(page), Number(limit),);
-                      toast.success('company updated successfully');
-                      handleCloseAddEdit()
-                    } else {
-                      toast.error(message)
-                    }
-                  }
-
-                } else { // create new company
-                  const message = await addCompany(formData);
-                  if (message === 'SUCCESS') {
-                    fetchCompanies(Number(page), Number(limit),);
-                    handleCloseAddEdit()
-                    toast.success('company created successfully');
-                  } else {
-                    toast.error(message)
-                  }
-                }
-
-              }}
-            >
-              {({ submitForm, isSubmitting, setFieldValue, values }) => (
-                <Form>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12}>
-                      <Field
-                        id="companyCodeInput"
-                        component={TextField}
-                        name="code"
-                        type="text"
-                        label="Code"
-                        fullWidth
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Field
-                        id="companyNameInput"
-                        component={TextField}
-                        name="name"
-                        type="text"
-                        label="Name"
-                        fullWidth
-                      />
-                    </Grid>
-                    {editId && <Grid item xs={12}>
-                      <Field
-                        id="companyName2NdInput"
-                        component={TextField}
-                        name="name_2nd"
-                        type="text"
-                        label="Name_2nd"
-                        fullWidth
-                      />
-                    </Grid>}
-                    {editId && <Grid item xs={12}>
-                      <Field
-                        id="companyDescriptionInput"
-                        component={TextField}
-                        name="description"
-                        type="text"
-                        label="Description"
-                        fullWidth
-                      />
-                    </Grid>}
-                    {editId && <Grid item xs={12}>
-                      <Field
-                        id="companyAddressInput"
-                        component={TextField}
-                        name="address"
-                        type="text"
-                        label="Address"
-                        fullWidth
-                      />
-                    </Grid>}
-                    <Grid item xs={12}>
-                      <Field
-                        id="companyNameWebsiteUrl"
-                        component={TextField}
-                        name="website_url"
-                        label="Website URL"
-                        fullWidth
-                      />
-                    </Grid>
-                    {editId && <Grid item xs={12}>
-                      <FormGroup>
-                        <FormControlLabel control={
-                          <Switch
-                            name="is_active"
-                            value={values.is_active}
-                            checked={values.is_active === true}
-                            onChange={(event, checked) => {
-                              setFieldValue("is_active", checked);
-                            }}
-                          />
-                        } label="Active" />
-                      </FormGroup>
-                    </Grid>}
-                    <Grid item xs={12} lg={6}>
-                      {
-                        imageUrl ?
-                          <Image
-                            src={imageUrl}
-                            width={500}
-                            height={500}
-                            alt={values.name}
-                            id="imagePreview"
-                            layout="responsive"
-                            priority={true}
-                          /> : null
-                      }
-                      <ButtonGroup variant="contained">
-                        <Button component="label" startIcon={<CloudUploadIcon />}>
-                          Upload Image
-                          <VisuallyHiddenInput type="file" onChange={(event) => {
-                            const file = event.target.files?.[0];
-                            setFieldValue("image", file);
-                            if (file) {
-                              setImageUrl(URL.createObjectURL(file))
-                            } else {
-                              setImageUrl('')
-                            }
-                          }} />
-                        </Button>
-                      </ButtonGroup>
-                    </Grid>
-                    <Grid item xs={12} lg={6}>
-                      {
-                        logoUrl ?
-                          <Image
-                            src={logoUrl}
-                            width={500}
-                            height={500}
-                            alt={values.name}
-                            id="logoPreview"
-                            layout="responsive"
-                            priority={true}
-                          /> : null
-                      }
-                      <ButtonGroup variant="contained">
-                        <Button component="label" startIcon={<CloudUploadIcon />}>
-                          Upload Logo
-                          <VisuallyHiddenInput type="file" onChange={(event) => {
-                            const file = event.target.files?.[0];
-                            setFieldValue("logo", file);
-                            if (file) {
-                              setLogoUrl(URL.createObjectURL(file))
-                            } else {
-                              setLogoUrl('')
-                            }
-                          }} />
-                        </Button>
-                      </ButtonGroup>
-                    </Grid>
-
-                  </Grid>
-                  {isSubmitting && <LinearProgress />}
-                  <br />
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    fullWidth
-                    disabled={isSubmitting}
-                    onClick={submitForm}
-                  >
-                    Submit
-                  </Button>
-                </Form>
-              )}
-            </Formik>
-          </Grid>
-        </Box>
-      </Modal>
-    )
-  }
-
   if (loading) {
     // Show skeleton loading while data is being fetched
     return (
@@ -527,7 +286,26 @@ const TableCompany = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
           Create
         </Button>
       }
-      <ModalAddEdit />
+      <ModalAddEditCompany
+        openAddEdit={openAddEdit}
+        handleCloseAddEdit={handleCloseAddEdit}
+        editId={editId}
+        editIdTranslation={editIdTranslation}
+        params={params}
+        modalStyle={modalStyle}
+        form={form}
+        editCompany={editCompany}
+        editCompanyTranslation={editCompanyTranslation}
+        addCompany={addCompany}
+        addCompanyTranslation={addCompanyTranslation}
+        fetchCompanies={fetchCompanies}
+        page={Number(page)}
+        limit={Number(limit)}
+        imageUrl={imageUrl}
+        logoUrl={logoUrl}
+        setImageUrl={setImageUrl}
+        setLogoUrl={setLogoUrl}
+      />
       <TableDataNotFound />
     </>;
   }
@@ -552,45 +330,36 @@ const TableCompany = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
         </Button>
       }
 
-      <ModalAddEdit />
+      <ModalAddEditCompany
+        openAddEdit={openAddEdit}
+        handleCloseAddEdit={handleCloseAddEdit}
+        editId={editId}
+        editIdTranslation={editIdTranslation}
+        params={params}
+        modalStyle={modalStyle}
+        form={form}
+        editCompany={editCompany}
+        editCompanyTranslation={editCompanyTranslation}
+        addCompany={addCompany}
+        addCompanyTranslation={addCompanyTranslation}
+        fetchCompanies={fetchCompanies}
+        page={Number(page)}
+        limit={Number(limit)}
+        imageUrl={imageUrl}
+        logoUrl={logoUrl}
+        setImageUrl={setImageUrl}
+        setLogoUrl={setLogoUrl}
+      />
 
       {/* modal view */}
       {resource?.data.includes('view') &&
-        <Modal
-          open={openView}
-          onClose={handleCloseView}
-          aria-labelledby="modal-view-company-title"
-          aria-describedby="modal-view-company-description"
-        >
-          <Box sx={modalStyle}>
-            <Typography id="modal-view-company-title" variant="h6" component="h2">
-              View Company
-            </Typography>
-            <Card sx={{ mt: 1 }}>
-              <CardContent>
-                {
-                  imageData.image_url &&
-                  <ImageAvatarPreview
-                    data={imageData}
-                  />
-                }
-                <Typography sx={{ fontSize: 14, marginTop: '10px' }} color="text.secondary" gutterBottom>
-                  CODE ({form.code})
-                </Typography>
-                <Typography variant="h5" gutterBottom>
-                  {form.name} {
-                    form.is_active ?
-                      <Chip label="active" color="success"></Chip> :
-                      <Chip label="disabled" color="error"></Chip>
-                  }
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {form.name_2nd} {form.description} {form.address}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Box>
-        </Modal>
+        <ModalViewCompany
+          openView={openView}
+          handleCloseView={handleCloseView}
+          modalStyle={modalStyle}
+          form={form}
+          imageData={imageData}
+        />
       }
 
 
