@@ -1,29 +1,24 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Button, TablePagination, Tooltip, Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Modal, Box, Typography, Grid, ButtonGroup, LinearProgress, FormGroup, FormControlLabel, Switch, CardContent, Card } from '@mui/material';
-import { Formik, Form, Field } from 'formik';
-import { TextField } from 'formik-mui';
+import { Button, TablePagination, Tooltip, Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow} from '@mui/material';
 import { deleteSolution, getSolutions, getSolutionResource, getSolution } from '@/data/repository/solution/solution-repository';
 import { ResponseSolutions, Solution } from '@/types/solution';
 import { TableDataNotFound, TableLoading } from '../../shared/table/table';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import Image from "next/image";
 import { ModalConfirmation } from '@/components/shared/modal/modal';
 import { toast } from 'sonner';
 import { ResponseGeneralDynamicResource } from '@/types/general';
 import { getAccessToken } from '@/actions/auth/auth-action';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { SortableColumn } from '@/components/shared/table/column';
-import { VisuallyHiddenInput } from '@/components/shared/button/button';
-import { CreateSolutionSchema, EditSolutionSchema } from '@/schemas/solution';
+import { defaultFormSolution } from '@/schemas/solution';
 import { addSolution, editSolution } from '@/actions/solution/solution-action';
-import { ImageAvatarPreview } from '@/components/shared/dialog/image-preview';
 import { getSolutionTranslation } from '@/data/repository/solution/solution-translation-repository';
 import { addSolutionTranslation, editSolutionTranslation } from '@/actions/solution/solution-translation-action';
+import { ModalAddEditSolution, ModalViewSolution } from '../modal/modal-solution';
 
 const modalStyle = {
   position: 'absolute',
@@ -36,16 +31,6 @@ const modalStyle = {
   boxShadow: 24,
   p: 4,
 };
-
-const defaultForm = {
-  id: '',
-  title: '',
-  title_2nd: '',
-  logo: '',
-  image: '',
-  is_active: false,
-  description: '',
-}
 
 const TableSolution = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, itemsPerPageList: number[] }) => {
   const [solutions, setSolutions] = useState<ResponseSolutions | null>(null);
@@ -65,7 +50,7 @@ const TableSolution = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: numbe
   // add and edit
   const [editId, setEditId] = useState('');
   const [editIdTranslation, setEditIdTranslation] = useState('');
-  const [form, setForm] = useState(defaultForm);
+  const [form, setForm] = useState(defaultFormSolution);
 
   const [openAddEdit, setOpenAddEdit] = React.useState(false);
   const handleOpenAddEdit = () => setOpenAddEdit(true);
@@ -73,7 +58,7 @@ const TableSolution = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: numbe
     setOpenAddEdit(false);
     setEditId('');
     setEditIdTranslation('');
-    setForm(defaultForm);
+    setForm(defaultFormSolution);
   };
   // view
   const [imageData, setImageData] = useState({
@@ -84,7 +69,7 @@ const TableSolution = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: numbe
   const handleOpenView = () => setOpenView(true);
   const handleCloseView = () => {
     setOpenView(false);
-    setForm(defaultForm);
+    setForm(defaultFormSolution);
     setImageData({
       name: '',
       image_url: '',
@@ -195,7 +180,7 @@ const TableSolution = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: numbe
           image_url: result.logo_url
         })
       }
-      
+
       const dataTranslation = await getSolutionTranslation(accessToken.value, id, params.locale);
       if (Object.keys(dataTranslation.data).length > 0) {
         const result = dataTranslation.data;
@@ -267,201 +252,6 @@ const TableSolution = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: numbe
     router.push(newPath);
   };
 
-  const ModalAddEdit = () => {
-    return (
-      <Modal
-        open={openAddEdit}
-        onClose={handleCloseAddEdit}
-        aria-labelledby="modal-solution-title"
-        aria-describedby="modal-solution-description"
-      >
-        <Box sx={modalStyle}>
-          <Typography id="modal-solution-title" variant="h6" component="h2">
-            {editId ? 'Edit Solution' : 'Add Solution'}
-          </Typography>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Formik
-              initialValues={form}
-              validationSchema={editId ? EditSolutionSchema : CreateSolutionSchema }
-              enableReinitialize={true}
-              onSubmit={async (values, { setSubmitting }) => {
-                setSubmitting(false);
-
-                const formData = new FormData();
-                formData.append('title', `${values.title}`);
-                formData.append('image', values.image);
-                formData.append('logo', values.logo);
-
-                if (editId) { // update solution
-                  formData.append('is_active', `${values.is_active}`);
-
-                  const message = await editSolution(editId, formData);
-                  if (message === 'SUCCESS') {
-
-                    // solution translation
-                    const formDataTranslation = new FormData();
-                    formDataTranslation.append('title', `${values.title_2nd}`);
-                    formDataTranslation.append('description', `${values.description}`);
-
-                    let message;
-                    if (editIdTranslation) {
-                      message = await editSolutionTranslation(editId, params.locale, formDataTranslation)
-                    } else {
-                      formDataTranslation.append('solution_id', editId);
-                      formDataTranslation.append('language_id', params.locale);
-                      message = await addSolutionTranslation(formDataTranslation)
-                    }
-
-                    if (message === 'SUCCESS') {
-                      fetchSolutions(Number(page), Number(limit),);
-                      toast.success('solution updated successfully');
-                      handleCloseAddEdit()
-                    } else {
-                      toast.error(message)
-                    }
-
-
-                  } else {
-                    toast.error(message)
-                  }
-                } else { // create new solution
-                  const message = await addSolution(formData);
-                  if (message === 'SUCCESS') {
-                    fetchSolutions(Number(page), Number(limit),);
-                    handleCloseAddEdit()
-                    toast.success('solution created successfully');
-                  } else {
-                    toast.error(message)
-                  }
-                }
-
-              }}
-            >
-              {({ submitForm, isSubmitting, setFieldValue, values }) => (
-                <Form>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12}>
-                      <Field
-                        id="solutionTitleInput"
-                        component={TextField}
-                        name="title"
-                        type="text"
-                        label="Title"
-                        fullWidth
-                      />
-                    </Grid>
-                    {editId && <Grid item xs={12}>
-                      <Field
-                        id="solutionTitle2NdInput"
-                        component={TextField}
-                        name="title_2nd"
-                        type="text"
-                        label="Title_2nd"
-                        fullWidth
-                      />
-                    </Grid>}
-                    {editId && <Grid item xs={12}>
-                      <Field
-                        id="solutionDescriptionInput"
-                        component={TextField}
-                        name="description"
-                        type="text"
-                        label="Description"
-                        fullWidth
-                      />
-                    </Grid>}
-                    {editId && <Grid item xs={12}>
-                      <FormGroup>
-                        <FormControlLabel control={
-                          <Switch
-                            name="is_active"
-                            value={values.is_active}
-                            checked={values.is_active === true}
-                            onChange={(event, checked) => {
-                              setFieldValue("is_active", checked);
-                            }}
-                          />
-                        } label="Active" />
-                      </FormGroup>
-                    </Grid>}
-                    <Grid item xs={12} lg={6}>
-                      {
-                        imageUrl ?
-                          <Image
-                            src={imageUrl}
-                            width={500}
-                            height={500}
-                            alt={values.title}
-                            id="imagePreview"
-                            layout="responsive"
-                            priority={true}
-                          /> : null
-                      }
-                      <ButtonGroup variant="contained">
-                        <Button component="label" startIcon={<CloudUploadIcon />}>
-                          Upload Image
-                          <VisuallyHiddenInput type="file" onChange={(event) => {
-                            const file = event.target.files?.[0];
-                            setFieldValue("image", file);
-                            if (file) {
-                              setImageUrl(URL.createObjectURL(file))
-                            } else {
-                              setImageUrl('')
-                            }
-                          }} />
-                        </Button>
-                      </ButtonGroup>
-                    </Grid>
-                    <Grid item xs={12} lg={6}>
-                      {
-                        logoUrl ?
-                          <Image
-                            src={logoUrl}
-                            width={500}
-                            height={500}
-                            alt={values.title}
-                            id="logoPreview"
-                            layout="responsive"
-                            priority={true}
-                          /> : null
-                      }
-                      <ButtonGroup variant="contained">
-                        <Button component="label" startIcon={<CloudUploadIcon />}>
-                          Upload Logo
-                          <VisuallyHiddenInput type="file" onChange={(event) => {
-                            const file = event.target.files?.[0];
-                            setFieldValue("logo", file);
-                            if (file) {
-                              setLogoUrl(URL.createObjectURL(file))
-                            } else {
-                              setLogoUrl('')
-                            }
-                          }} />
-                        </Button>
-                      </ButtonGroup>
-                    </Grid>
-
-                  </Grid>
-                  {isSubmitting && <LinearProgress />}
-                  <br />
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    fullWidth
-                    disabled={isSubmitting}
-                    onClick={submitForm}
-                  >
-                    Submit
-                  </Button>
-                </Form>
-              )}
-            </Formik>
-          </Grid>
-        </Box>
-      </Modal>
-    )
-  }
-
   if (loading) {
     // Show skeleton loading while data is being fetched
     return (
@@ -488,7 +278,26 @@ const TableSolution = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: numbe
           Create
         </Button>
       }
-      <ModalAddEdit />
+      <ModalAddEditSolution
+        openAddEdit={openAddEdit}
+        handleCloseAddEdit={handleCloseAddEdit}
+        editId={editId}
+        editIdTranslation={editIdTranslation}
+        params={params}
+        modalStyle={modalStyle}
+        form={form}
+        editSolution={editSolution}
+        editSolutionTranslation={editSolutionTranslation}
+        addSolution={addSolution}
+        addSolutionTranslation={addSolutionTranslation}
+        fetchSolutions={fetchSolutions}
+        page={Number(page)}
+        limit={Number(limit)}
+        imageUrl={imageUrl}
+        logoUrl={logoUrl}
+        setImageUrl={setImageUrl}
+        setLogoUrl={setLogoUrl}
+      />
       <TableDataNotFound />
     </>;
   }
@@ -513,42 +322,36 @@ const TableSolution = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: numbe
         </Button>
       }
 
-      <ModalAddEdit />
+      <ModalAddEditSolution
+        openAddEdit={openAddEdit}
+        handleCloseAddEdit={handleCloseAddEdit}
+        editId={editId}
+        editIdTranslation={editIdTranslation}
+        params={params}
+        modalStyle={modalStyle}
+        form={form}
+        editSolution={editSolution}
+        editSolutionTranslation={editSolutionTranslation}
+        addSolution={addSolution}
+        addSolutionTranslation={addSolutionTranslation}
+        fetchSolutions={fetchSolutions}
+        page={Number(page)}
+        limit={Number(limit)}
+        imageUrl={imageUrl}
+        logoUrl={logoUrl}
+        setImageUrl={setImageUrl}
+        setLogoUrl={setLogoUrl}
+      />
 
       {/* modal view */}
       {resource?.data.includes('view') &&
-        <Modal
-          open={openView}
-          onClose={handleCloseView}
-          aria-labelledby="modal-view-solution-title"
-          aria-describedby="modal-view-solution-description"
-        >
-          <Box sx={modalStyle}>
-            <Typography id="modal-view-solution-title" variant="h6" component="h2">
-              View Solution
-            </Typography>
-            <Card sx={{ mt: 1 }}>
-              <CardContent>
-                {
-                  imageData.image_url &&
-                  <ImageAvatarPreview
-                    data={imageData}
-                  />
-                }
-                <Typography variant="h5" gutterBottom>
-                  {form.title} {
-                    form.is_active ?
-                      <Chip label="active" color="success"></Chip> :
-                      <Chip label="disabled" color="error"></Chip>
-                  }
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {form.title_2nd} {form.description}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Box>
-        </Modal>
+        <ModalViewSolution
+          openView={openView}
+          handleCloseView={handleCloseView}
+          modalStyle={modalStyle}
+          form={form}
+          imageData={imageData}
+        />
       }
 
 

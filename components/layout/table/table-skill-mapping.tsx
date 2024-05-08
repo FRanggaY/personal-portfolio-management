@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Button, TablePagination, Tooltip, Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Modal, Box, Typography, Grid, LinearProgress, FormGroup, FormControlLabel, Switch, CardContent, Card, FormControl, InputLabel, Select, MenuItem, FormHelperText } from '@mui/material';
-import { Formik, Form } from 'formik';
+import { Button, TablePagination, Tooltip, Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import { deleteSkillMapping, getSkillMappings, getSkillMapping } from '@/data/repository/skill-mapping-repository';
 import { getSkills, getSkillResource } from '@/data/repository/skill/skill-repository';
 import { ResponseSkillMappings, SkillMapping } from '@/types/skill-mapping';
@@ -16,9 +15,10 @@ import { ResponseGeneralDynamicResource } from '@/types/general';
 import { getAccessToken } from '@/actions/auth/auth-action';
 import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import { SortableColumn } from '@/components/shared/table/column';
-import { CreateSkillMappingSchema, EditSkillMappingSchema } from '@/schemas/skill-mapping';
+import { defaultFormSkillMapping } from '@/schemas/skill-mapping';
 import { addSkillMapping, editSkillMapping } from '@/actions/skill-mapping/skill-mapping-action';
 import { Skill, ResponseSkills } from '@/types/skill';
+import { ModalAddEditSkillMapping, ModalViewSkillMapping } from '../modal/modal-skill-mapping';
 
 const modalStyle = {
   position: 'absolute',
@@ -50,45 +50,21 @@ const TableSkillMapping = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: n
   const sortOrder = searchParams.get('sort_order') ?? "asc";
   // add and edit
   const [editId, setEditId] = useState('');
-  const [form, setForm] = useState({
-    id: '',
-    skill_id: '',
-    skill: {
-      id: '',
-      name: '',
-    },
-    is_active: false,
-  })
+  const [form, setForm] = useState(defaultFormSkillMapping)
 
   const [openAddEdit, setOpenAddEdit] = React.useState(false);
   const handleOpenAddEdit = () => setOpenAddEdit(true);
   const handleCloseAddEdit = () => {
     setOpenAddEdit(false);
     setEditId('');
-    setForm({
-      id: '',
-      skill_id: '',
-      skill: {
-        id: '',
-        name: '',
-      },
-      is_active: false,
-    })
+    setForm(defaultFormSkillMapping)
   };
   // view
   const [openView, setOpenView] = React.useState(false);
   const handleOpenView = () => setOpenView(true);
   const handleCloseView = () => {
     setOpenView(false);
-    setForm({
-      id: '',
-      skill_id: '',
-      skill: {
-        id: '',
-        name: '',
-      },
-      is_active: false,
-    })
+    setForm(defaultFormSkillMapping)
   };
 
   // put default to base limit if that outside range
@@ -268,111 +244,6 @@ const TableSkillMapping = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: n
     router.push(newPath);
   };
 
-  const ModalAddEdit = () => {
-    return (
-      <Modal
-        open={openAddEdit}
-        onClose={handleCloseAddEdit}
-        aria-labelledby="modal-skillMapping-title"
-        aria-describedby="modal-skillMapping-description"
-      >
-        <Box sx={modalStyle}>
-          <Typography id="modal-skillMapping-title" variant="h6" component="h2">
-            {editId ? 'Edit SkillMapping' : 'Add SkillMapping'}
-          </Typography>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Formik
-              initialValues={form}
-              validationSchema={editId ? EditSkillMappingSchema : CreateSkillMappingSchema}
-              onSubmit={async (values, { setSubmitting }) => {
-                setSubmitting(false);
-
-                const formData = new FormData();
-                formData.append('skill_id', `${values.skill_id}`);
-                if (editId) { // update skillMapping
-                  formData.append('is_active', `${values.is_active}`);
-
-                  const message = await editSkillMapping(editId, formData);
-                  if (message === 'SUCCESS') {
-                    fetchSkillMappings(Number(page), Number(limit),);
-                    handleCloseAddEdit()
-                    toast.success('skillMapping updated successfully');
-                  } else {
-                    toast.error(message)
-                  }
-                } else { // create new skillMapping
-                  const message = await addSkillMapping(formData);
-                  if (message === 'SUCCESS') {
-                    fetchSkillMappings(Number(page), Number(limit),);
-                    handleCloseAddEdit()
-                    toast.success('skillMapping created successfully');
-                  } else {
-                    toast.error(message)
-                  }
-                }
-
-              }}
-            >
-              {({ submitForm, isSubmitting, setFieldValue, values, touched, errors }) => (
-                <Form>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12}>
-                      <FormControl fullWidth>
-                        <InputLabel id="select-skill_id-label">Skill</InputLabel>
-                        <Select
-                          labelId="select-skill_id-label"
-                          id="select-skill_id"
-                          value={values.skill_id}
-                          label="Skill"
-                          onChange={(event) => {
-                            setFieldValue("skill_id", event.target.value);
-                          }}
-                          error={touched.skill_id && Boolean(errors.skill_id)}
-                        >
-                          {
-                            skills?.map((data: Skill) => {
-                              return <MenuItem value={data.id} key={data.id}>{data.name}</MenuItem>
-                            })
-                          }
-                        </Select>
-                      </FormControl>
-                      <FormHelperText>{touched.skill_id && errors.skill_id}</FormHelperText>
-                    </Grid>
-                    {editId && <Grid item xs={12}>
-                      <FormGroup>
-                        <FormControlLabel control={
-                          <Switch
-                            name="is_active"
-                            value={values.is_active}
-                            checked={values.is_active === true}
-                            onChange={(event, checked) => {
-                              setFieldValue("is_active", checked);
-                            }}
-                          />
-                        } label="Active" />
-                      </FormGroup>
-                    </Grid>}
-                  </Grid>
-                  {isSubmitting && <LinearProgress />}
-                  <br />
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    fullWidth
-                    disabled={isSubmitting}
-                    onClick={submitForm}
-                  >
-                    Submit
-                  </Button>
-                </Form>
-              )}
-            </Formik>
-          </Grid>
-        </Box>
-      </Modal>
-    )
-  }
-
   if (loading) {
     // Show skeleton loading while data is being fetched
     return (
@@ -404,8 +275,19 @@ const TableSkillMapping = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: n
         </Button>
       }
 
-      <ModalAddEdit />
-      <ModalAddEdit />
+      <ModalAddEditSkillMapping
+        openAddEdit={openAddEdit}
+        handleCloseAddEdit={handleCloseAddEdit}
+        editId={editId}
+        modalStyle={modalStyle}
+        form={form}
+        editSkillMapping={editSkillMapping}
+        addSkillMapping={addSkillMapping}
+        fetchSkillMappings={fetchSkillMappings}
+        page={Number(page)}
+        limit={Number(limit)}
+        skills={skills}
+      />
       <TableDataNotFound />
     </>;
   }
@@ -434,38 +316,29 @@ const TableSkillMapping = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: n
         </Button>
       }
 
-      <ModalAddEdit />
+      <ModalAddEditSkillMapping
+        openAddEdit={openAddEdit}
+        handleCloseAddEdit={handleCloseAddEdit}
+        editId={editId}
+        modalStyle={modalStyle}
+        form={form}
+        editSkillMapping={editSkillMapping}
+        addSkillMapping={addSkillMapping}
+        fetchSkillMappings={fetchSkillMappings}
+        page={Number(page)}
+        limit={Number(limit)}
+        skills={skills}
+      />
 
       {/* modal view */}
       {resource?.data.includes('view_skill') &&
-        <Modal
-          open={openView}
-          onClose={handleCloseView}
-          aria-labelledby="modal-view-skillMapping-title"
-          aria-describedby="modal-view-skillMapping-description"
-        >
-          <Box sx={modalStyle}>
-            <Typography id="modal-view-skillMapping-title" variant="h6" component="h2">
-              View SkillMapping
-            </Typography>
-            <Card sx={{ mt: 1 }}>
-              <CardContent>
-                <Typography sx={{ fontSize: 14, marginTop: '10px' }} color="text.secondary" gutterBottom>
-                  {form.skill.name}
-                </Typography>
-                <Typography variant="h5" gutterBottom>
-                  {
-                    form.is_active ?
-                      <Chip label="active" color="success"></Chip> :
-                      <Chip label="disabled" color="error"></Chip>
-                  }
-                </Typography>
-              </CardContent>
-            </Card>
-          </Box>
-        </Modal>
+        <ModalViewSkillMapping
+          openView={openView}
+          handleCloseView={handleCloseView}
+          modalStyle={modalStyle}
+          form={form}
+        />
       }
-
 
       <TableContainer component={Paper}>
         <Table sx={{ minWidth: 650 }} aria-label="table">

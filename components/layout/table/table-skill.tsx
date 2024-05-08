@@ -1,29 +1,24 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Button, TablePagination, Tooltip, Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Modal, Box, Typography, Grid, ButtonGroup, LinearProgress, FormGroup, FormControlLabel, Switch, CardContent, Card } from '@mui/material';
-import { Formik, Form, Field } from 'formik';
-import { TextField } from 'formik-mui';
+import { Button, TablePagination, Tooltip, Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow} from '@mui/material';
 import { deleteSkill, getSkills, getSkillResource, getSkill } from '@/data/repository/skill/skill-repository';
 import { ResponseSkills, Skill } from '@/types/skill';
 import { TableDataNotFound, TableLoading } from '../../shared/table/table';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import Image from "next/image";
 import { ModalConfirmation } from '@/components/shared/modal/modal';
 import { toast } from 'sonner';
 import { ResponseGeneralDynamicResource } from '@/types/general';
 import { getAccessToken } from '@/actions/auth/auth-action';
 import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import { SortableColumn } from '@/components/shared/table/column';
-import { VisuallyHiddenInput } from '@/components/shared/button/button';
-import { CreateSkillSchema, EditSkillSchema } from '@/schemas/skill';
+import { defaultFormSkill } from '@/schemas/skill';
 import { addSkill, editSkill } from '@/actions/skill/skill-action';
-import { ImageAvatarPreview } from '@/components/shared/dialog/image-preview';
 import { getSkillTranslation } from '@/data/repository/skill/skill-translation-repository';
 import { addSkillTranslation, editSkillTranslation } from '@/actions/skill/skill-translation-action';
+import { ModalAddEditSkill, ModalViewSkill } from '../modal/modal-skill';
 
 const modalStyle = {
   position: 'absolute',
@@ -36,19 +31,6 @@ const modalStyle = {
   boxShadow: 24,
   p: 4,
 };
-
-const defaultForm = {
-  id: '',
-  code: '',
-  name: '',
-  name_2nd: '',
-  category: '',
-  logo: '',
-  image: '',
-  is_active: false,
-  website_url: '',
-  description: '',
-}
 
 const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, itemsPerPageList: number[] }) => {
   const [skills, setSkills] = useState<ResponseSkills | null>(null);
@@ -68,7 +50,7 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
   // add and edit
   const [editId, setEditId] = useState('');
   const [editIdTranslation, setEditIdTranslation] = useState('');
-  const [form, setForm] = useState(defaultForm)
+  const [form, setForm] = useState(defaultFormSkill)
 
   const [openAddEdit, setOpenAddEdit] = React.useState(false);
   const handleOpenAddEdit = () => setOpenAddEdit(true);
@@ -76,7 +58,7 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
     setOpenAddEdit(false);
     setEditId('');
     setEditIdTranslation('');
-    setForm(defaultForm)
+    setForm(defaultFormSkill)
   };
   // view
   const [imageData, setImageData] = useState({
@@ -87,7 +69,7 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
   const handleOpenView = () => setOpenView(true);
   const handleCloseView = () => {
     setOpenView(false);
-    setForm(defaultForm)
+    setForm(defaultFormSkill)
     setImageData({
       name: '',
       image_url: '',
@@ -276,230 +258,6 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
     router.push(newPath);
   };
 
-  const ModalAddEdit = () => {
-    return (
-      <Modal
-        open={openAddEdit}
-        onClose={handleCloseAddEdit}
-        aria-labelledby="modal-skill-title"
-        aria-describedby="modal-skill-description"
-      >
-        <Box sx={modalStyle}>
-          <Typography id="modal-skill-title" variant="h6" component="h2">
-            {editId ? 'Edit Skill' : 'Add Skill'}
-          </Typography>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Formik
-              initialValues={form}
-              validationSchema={editId ? EditSkillSchema : CreateSkillSchema}
-              onSubmit={async (values, { setSubmitting }) => {
-                setSubmitting(false);
-
-                const formData = new FormData();
-                formData.append('code', `${values.code}`);
-                formData.append('name', `${values.name}`);
-                formData.append('category', `${values.category}`);
-                formData.append('website_url', `${values.website_url}`);
-                formData.append('image', values.image);
-                formData.append('logo', values.logo);
-
-                if (editId) { // update skill
-                  formData.append('is_active', `${values.is_active}`);
-
-                  const message = await editSkill(editId, formData);
-                  if (message === 'SUCCESS') {
-
-                    // skill translation
-                    const formDataTranslation = new FormData();
-                    formDataTranslation.append('name', `${values.name_2nd}`);
-                    formDataTranslation.append('description', `${values.description}`);
-
-                    let message;
-                    if (editIdTranslation) {
-                      message = await editSkillTranslation(editId, params.locale, formDataTranslation)
-                    } else {
-                      formDataTranslation.append('skill_id', editId);
-                      formDataTranslation.append('language_id', params.locale);
-                      message = await addSkillTranslation(formDataTranslation)
-                    }
-
-                    if (message === 'SUCCESS') {
-                      fetchSkills(Number(page), Number(limit),);
-                      toast.success('skill updated successfully');
-                      handleCloseAddEdit()
-                    } else {
-                      toast.error(message)
-                    }
-
-                  } else {
-                    toast.error(message)
-                  }
-                } else { // create new skill
-                  const message = await addSkill(formData);
-                  if (message === 'SUCCESS') {
-                    fetchSkills(Number(page), Number(limit),);
-                    handleCloseAddEdit()
-                    toast.success('skill created successfully');
-                  } else {
-                    toast.error(message)
-                  }
-                }
-
-              }}
-            >
-              {({ submitForm, isSubmitting, setFieldValue, values }) => (
-                <Form>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12}>
-                      <Field
-                        id="skillCodeInput"
-                        component={TextField}
-                        name="code"
-                        type="text"
-                        label="Code"
-                        fullWidth
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Field
-                        id="skillNameInput"
-                        component={TextField}
-                        name="name"
-                        type="text"
-                        label="Name"
-                        fullWidth
-                      />
-                    </Grid>
-                    {editId && <Grid item xs={12}>
-                      <Field
-                        id="skillName2NdInput"
-                        component={TextField}
-                        name="name_2nd"
-                        type="text"
-                        label="Name_2nd"
-                        fullWidth
-                      />
-                    </Grid>}
-                    {editId && <Grid item xs={12}>
-                      <Field
-                        id="skillDescriptionInput"
-                        component={TextField}
-                        name="description"
-                        type="text"
-                        label="Description"
-                        fullWidth
-                      />
-                    </Grid>}
-                    <Grid item xs={12}>
-                      <Field
-                        id="skillCategory"
-                        component={TextField}
-                        name="category"
-                        label="Category"
-                        fullWidth
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Field
-                        id="skillWebsiteUrl"
-                        component={TextField}
-                        name="website_url"
-                        label="Website URL"
-                        fullWidth
-                      />
-                    </Grid>
-                    {editId && <Grid item xs={12}>
-                      <FormGroup>
-                        <FormControlLabel control={
-                          <Switch
-                            name="is_active"
-                            value={values.is_active}
-                            checked={values.is_active === true}
-                            onChange={(event, checked) => {
-                              setFieldValue("is_active", checked);
-                            }}
-                          />
-                        } label="Active" />
-                      </FormGroup>
-                    </Grid>}
-                    <Grid item xs={12} lg={6}>
-                      {
-                        imageUrl ?
-                          <Image
-                            src={imageUrl}
-                            width={500}
-                            height={500}
-                            alt={values.name}
-                            id="imagePreview"
-                            layout="responsive"
-                            priority={true}
-                          /> : null
-                      }
-                      <ButtonGroup variant="contained">
-                        <Button component="label" startIcon={<CloudUploadIcon />}>
-                          Upload Image
-                          <VisuallyHiddenInput type="file" onChange={(event) => {
-                            const file = event.target.files?.[0];
-                            setFieldValue("image", file);
-                            if (file) {
-                              setImageUrl(URL.createObjectURL(file))
-                            } else {
-                              setImageUrl('')
-                            }
-                          }} />
-                        </Button>
-                      </ButtonGroup>
-                    </Grid>
-                    <Grid item xs={12} lg={6}>
-                      {
-                        logoUrl ?
-                          <Image
-                            src={logoUrl}
-                            width={500}
-                            height={500}
-                            alt={values.name}
-                            id="logoPreview"
-                            layout="responsive"
-                            priority={true}
-                          /> : null
-                      }
-                      <ButtonGroup variant="contained">
-                        <Button component="label" startIcon={<CloudUploadIcon />}>
-                          Upload Logo
-                          <VisuallyHiddenInput type="file" onChange={(event) => {
-                            const file = event.target.files?.[0];
-                            setFieldValue("logo", file);
-                            if (file) {
-                              setLogoUrl(URL.createObjectURL(file))
-                            } else {
-                              setLogoUrl('')
-                            }
-                          }} />
-                        </Button>
-                      </ButtonGroup>
-                    </Grid>
-
-                  </Grid>
-                  {isSubmitting && <LinearProgress />}
-                  <br />
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    fullWidth
-                    disabled={isSubmitting}
-                    onClick={submitForm}
-                  >
-                    Submit
-                  </Button>
-                </Form>
-              )}
-            </Formik>
-          </Grid>
-        </Box>
-      </Modal>
-    )
-  }
-
   if (loading) {
     // Show skeleton loading while data is being fetched
     return (
@@ -532,7 +290,26 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
       >
         Mapping
       </Button>
-      <ModalAddEdit />
+      <ModalAddEditSkill
+        openAddEdit={openAddEdit}
+        handleCloseAddEdit={handleCloseAddEdit}
+        editId={editId}
+        editIdTranslation={editIdTranslation}
+        params={params}
+        modalStyle={modalStyle}
+        form={form}
+        editSkill={editSkill}
+        editSkillTranslation={editSkillTranslation}
+        addSkill={addSkill}
+        addSkillTranslation={addSkillTranslation}
+        fetchSkills={fetchSkills}
+        page={Number(page)}
+        limit={Number(limit)}
+        imageUrl={imageUrl}
+        logoUrl={logoUrl}
+        setImageUrl={setImageUrl}
+        setLogoUrl={setLogoUrl}
+      />
       <TableDataNotFound />
     </>;
   }
@@ -563,47 +340,37 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
         Mapping
       </Button>
 
-      <ModalAddEdit />
+      <ModalAddEditSkill
+        openAddEdit={openAddEdit}
+        handleCloseAddEdit={handleCloseAddEdit}
+        editId={editId}
+        editIdTranslation={editIdTranslation}
+        params={params}
+        modalStyle={modalStyle}
+        form={form}
+        editSkill={editSkill}
+        editSkillTranslation={editSkillTranslation}
+        addSkill={addSkill}
+        addSkillTranslation={addSkillTranslation}
+        fetchSkills={fetchSkills}
+        page={Number(page)}
+        limit={Number(limit)}
+        imageUrl={imageUrl}
+        logoUrl={logoUrl}
+        setImageUrl={setImageUrl}
+        setLogoUrl={setLogoUrl}
+      />
 
       {/* modal view */}
       {resource?.data.includes('view_skill_other') &&
-        <Modal
-          open={openView}
-          onClose={handleCloseView}
-          aria-labelledby="modal-view-skill-title"
-          aria-describedby="modal-view-skill-description"
-        >
-          <Box sx={modalStyle}>
-            <Typography id="modal-view-skill-title" variant="h6" component="h2">
-              View Skill
-            </Typography>
-            <Card sx={{ mt: 1 }}>
-              <CardContent>
-                {
-                  imageData.image_url &&
-                  <ImageAvatarPreview
-                    data={imageData}
-                  />
-                }
-                <Typography sx={{ fontSize: 14, marginTop: '10px' }} color="text.secondary" gutterBottom>
-                  CODE ({form.code})
-                </Typography>
-                <Typography variant="h5" gutterBottom>
-                  {form.name} {
-                    form.is_active ?
-                      <Chip label="active" color="success"></Chip> :
-                      <Chip label="disabled" color="error"></Chip>
-                  }
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {form.name_2nd} {form.category} {form.description}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Box>
-        </Modal>
+        <ModalViewSkill
+          openView={openView}
+          handleCloseView={handleCloseView}
+          modalStyle={modalStyle}
+          form={form}
+          imageData={imageData}
+        />
       }
-
 
       <TableContainer component={Paper}>
         <Table sx={{ minWidth: 650 }} aria-label="table">

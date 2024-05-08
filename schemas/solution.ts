@@ -1,5 +1,15 @@
 import * as Yup from 'yup';
 
+export const defaultFormSolution = {
+  id: '',
+  title: '',
+  title_2nd: '',
+  logo: '',
+  image: '',
+  is_active: false,
+  description: '',
+}
+
 export const CreateSolutionSchema = Yup.object().shape({
   title: Yup.string()
     .min(1, 'Too Short!')

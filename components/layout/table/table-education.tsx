@@ -17,7 +17,7 @@ import { SortableColumn } from '@/components/shared/table/column';
 import { defaultFormEducation } from '@/schemas/education';
 import { addEducation, editEducation } from '@/actions/education/education-action';
 import { School, ResponseSchools } from '@/types/school';
-import { getSchools } from '@/data/repository/school-repository';
+import { getSchools } from '@/data/repository/school/school-repository';
 import { getEducationTranslation } from '@/data/repository/education/education-translation-repository';
 import { ModalAddEditEducation, ModalViewEducation } from '../modal/modal-education';
 import { addEducationTranslation, editEducationTranslation } from '@/actions/education/education-translation-action';

@@ -1,5 +1,18 @@
 import * as Yup from 'yup';
 
+export const defaultFormSkill = {
+  id: '',
+  code: '',
+  name: '',
+  name_2nd: '',
+  category: '',
+  logo: '',
+  image: '',
+  is_active: false,
+  website_url: '',
+  description: '',
+}
+
 export const CreateSkillSchema = Yup.object().shape({
   code: Yup.string()
     .min(1, 'Too Short!')
