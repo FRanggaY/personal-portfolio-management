@@ -1,6 +1,6 @@
 'use server';
 
-import { createProject, updateProject } from "@/data/repository/project-repository";
+import { createProject, updateProject } from "@/data/repository/project/project-repository";
 import { revalidatePath } from "next/cache";
 import { getAccessToken } from "../auth/auth-action";
 
