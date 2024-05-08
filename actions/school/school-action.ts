@@ -1,6 +1,6 @@
 'use server';
 
-import { createSchool, updateSchool } from "@/data/repository/school-repository";
+import { createSchool, updateSchool } from "@/data/repository/school/school-repository";
 import { revalidatePath } from "next/cache";
 import { getAccessToken } from "../auth/auth-action";
 

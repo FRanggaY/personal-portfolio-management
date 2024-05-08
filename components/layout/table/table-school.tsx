@@ -1,27 +1,24 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Button, TablePagination, Tooltip, Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Modal, Box, Typography, Grid, ButtonGroup, LinearProgress, FormGroup, FormControlLabel, Switch, CardContent, Card } from '@mui/material';
-import { Formik, Form, Field } from 'formik';
-import { TextField } from 'formik-mui';
-import { deleteSchool, getSchools, getSchoolResource, getSchool } from '@/data/repository/school-repository';
+import { Button, TablePagination, Tooltip, Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow} from '@mui/material';
+import { deleteSchool, getSchools, getSchoolResource, getSchool } from '@/data/repository/school/school-repository';
 import { ResponseSchools, School } from '@/types/school';
 import { TableDataNotFound, TableLoading } from '../../shared/table/table';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import Image from "next/image";
 import { ModalConfirmation } from '@/components/shared/modal/modal';
 import { toast } from 'sonner';
 import { ResponseGeneralDynamicResource } from '@/types/general';
 import { getAccessToken } from '@/actions/auth/auth-action';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { SortableColumn } from '@/components/shared/table/column';
-import { VisuallyHiddenInput } from '@/components/shared/button/button';
-import { CreateSchoolSchema, EditSchoolSchema } from '@/schemas/school';
+import { defaultFormSchool } from '@/schemas/school';
 import { addSchool, editSchool } from '@/actions/school/school-action';
-import { ImageAvatarPreview } from '@/components/shared/dialog/image-preview';
+import { getSchoolTranslation } from '@/data/repository/school/school-translation-repository';
+import { ModalAddEditSchool, ModalViewSchool } from '../modal/modal-school';
+import { addSchoolTranslation, editSchoolTranslation } from '@/actions/school/school-translation-action';
 
 const modalStyle = {
   position: 'absolute',
@@ -44,6 +41,8 @@ const TableSchool = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number,
   });
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const params = useParams<{ locale: string; }>();
+  const [editIdTranslation, setEditIdTranslation] = useState('');
   const searchParams = useSearchParams();
   const page = searchParams.get('page') ?? 1;
   let limit = searchParams.get('limit') ?? itemsPerPage;
@@ -51,30 +50,14 @@ const TableSchool = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number,
   const sortOrder = searchParams.get('sort_order') ?? "asc";
   // add and edit
   const [editId, setEditId] = useState('');
-  const [form, setForm] = useState({
-    id: '',
-    code: '',
-    name: '',
-    logo: '',
-    image: '',
-    is_active: false,
-    website_url: '',
-  })
+  const [form, setForm] = useState(defaultFormSchool)
 
   const [openAddEdit, setOpenAddEdit] = React.useState(false);
   const handleOpenAddEdit = () => setOpenAddEdit(true);
   const handleCloseAddEdit = () => {
     setOpenAddEdit(false);
     setEditId('');
-    setForm({
-      id: '',
-      code: '',
-      name: '',
-      logo: '',
-      image: '',
-      website_url: '',
-      is_active: false,
-    })
+    setForm(defaultFormSchool)
   };
   // view
   const [imageData, setImageData] = useState({
@@ -85,15 +68,7 @@ const TableSchool = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number,
   const handleOpenView = () => setOpenView(true);
   const handleCloseView = () => {
     setOpenView(false);
-    setForm({
-      id: '',
-      code: '',
-      name: '',
-      logo: '',
-      image: '',
-      website_url: '',
-      is_active: false,
-    })
+    setForm(defaultFormSchool)
     setImageData({
       name: '',
       image_url: '',
@@ -147,20 +122,44 @@ const TableSchool = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number,
   };
 
   // handle edit
-  const handleEdit = (row: School) => {
-    setForm({
-      id: row.id,
-      name: row.name,
-      code: row.code,
-      is_active: row.is_active ?? false,
-      image: '',
-      logo: '',
-      website_url: row.website_url ?? '',
-    })
-    setImageUrl(row.image_url);
-    setLogoUrl(row.logo_url);
-    setEditId(row.id);
-    handleOpenAddEdit();
+  const handleEdit = async (id: string) => {
+    const accessToken = await getAccessToken();
+    if (accessToken) {
+      const data = await getSchool(accessToken.value, id);
+      if (Object.keys(data.data).length > 0) {
+        const result = data.data;
+        setForm({
+          id: result.id,
+          name: result.name,
+          code: result.code,
+          is_active: result.is_active ?? false,
+          image: '',
+          logo: '',
+          website_url: result.website_url ?? '',
+          description: '',
+          name_2nd: '',
+          address: '',
+        })
+        setImageUrl(result.image_url);
+        setLogoUrl(result.logo_url);
+        setEditId(result.id);
+      }
+
+      const dataTranslation = await getSchoolTranslation(accessToken.value, id, params.locale);
+      if (Object.keys(dataTranslation.data).length > 0) {
+        const result = dataTranslation.data;
+        setForm(prevForm => ({
+          ...prevForm,
+          description: result.description ?? '',
+          name_2nd: result.name ?? '',
+          address: result.address ?? '',
+        }));
+        setEditIdTranslation(result.id);
+      } else {
+        setEditIdTranslation('');
+      }
+      handleOpenAddEdit();
+    }
   };
 
   // handle view
@@ -178,11 +177,25 @@ const TableSchool = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number,
           image: '',
           logo: '',
           website_url: result.website_url ?? '',
+          name_2nd: '',
+          address: '',
+          description: '',
         })
         setImageData({
           name: result.name,
           image_url: result.logo_url
         })
+
+        const dataTranslation = await getSchoolTranslation(accessToken.value, id, params.locale);
+        if (Object.keys(dataTranslation.data).length > 0) {
+          const result = dataTranslation.data;
+          setForm(prevForm => ({
+            ...prevForm,
+            description: result.description ?? '',
+            name_2nd: result.name ?? '',
+            address: result.address ?? '',
+          }));
+        }
       }
       handleOpenView();
     }
@@ -246,180 +259,6 @@ const TableSchool = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number,
     router.push(newPath);
   };
 
-  const ModalAddEdit = () => {
-    return (
-      <Modal
-        open={openAddEdit}
-        onClose={handleCloseAddEdit}
-        aria-labelledby="modal-school-title"
-        aria-describedby="modal-school-description"
-      >
-        <Box sx={modalStyle}>
-          <Typography id="modal-school-title" variant="h6" component="h2">
-            {editId ? 'Edit School' : 'Add School'}
-          </Typography>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Formik
-              initialValues={form}
-              validationSchema={editId ? EditSchoolSchema : CreateSchoolSchema}
-              onSubmit={async (values, { setSubmitting }) => {
-                setSubmitting(false);
-
-                const formData = new FormData();
-                formData.append('code', `${values.code}`);
-                formData.append('name', `${values.name}`);
-                formData.append('website_url', `${values.website_url}`);
-                formData.append('image', values.image);
-                formData.append('logo', values.logo);
-
-                if (editId) { // update school
-                  formData.append('is_active', `${values.is_active}`);
-
-                  const message = await editSchool(editId, formData);
-                  if (message === 'SUCCESS') {
-                    fetchSchools(Number(page), Number(limit),);
-                    handleCloseAddEdit()
-                    toast.success('school updated successfully');
-                  } else {
-                    toast.error(message)
-                  }
-                } else { // create new school
-                  const message = await addSchool(formData);
-                  if (message === 'SUCCESS') {
-                    fetchSchools(Number(page), Number(limit),);
-                    handleCloseAddEdit()
-                    toast.success('school created successfully');
-                  } else {
-                    toast.error(message)
-                  }
-                }
-
-              }}
-            >
-              {({ submitForm, isSubmitting, setFieldValue, values }) => (
-                <Form>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12}>
-                      <Field
-                        id="schoolCodeInput"
-                        component={TextField}
-                        name="code"
-                        type="text"
-                        label="Code"
-                        fullWidth
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Field
-                        id="schoolNameInput"
-                        component={TextField}
-                        name="name"
-                        type="text"
-                        label="Name"
-                        fullWidth
-                      />
-                    </Grid>
-                    <Grid item xs={12}>
-                      <Field
-                        id="schoolNameWebsiteUrl"
-                        component={TextField}
-                        name="website_url"
-                        label="Website URL"
-                        fullWidth
-                      />
-                    </Grid>
-                    {editId && <Grid item xs={12}>
-                      <FormGroup>
-                        <FormControlLabel control={
-                          <Switch
-                            name="is_active"
-                            value={values.is_active}
-                            checked={values.is_active === true}
-                            onChange={(event, checked) => {
-                              setFieldValue("is_active", checked);
-                            }}
-                          />
-                        } label="Active" />
-                      </FormGroup>
-                    </Grid>}
-                    <Grid item xs={12} lg={6}>
-                      {
-                        imageUrl ?
-                          <Image
-                            src={imageUrl}
-                            width={500}
-                            height={500}
-                            alt={values.name}
-                            id="imagePreview"
-                            layout="responsive"
-                            priority={true}
-                          /> : null
-                      }
-                      <ButtonGroup variant="contained">
-                        <Button component="label" startIcon={<CloudUploadIcon />}>
-                          Upload Image
-                          <VisuallyHiddenInput type="file" onChange={(event) => {
-                            const file = event.target.files?.[0];
-                            setFieldValue("image", file);
-                            if (file) {
-                              setImageUrl(URL.createObjectURL(file))
-                            } else {
-                              setImageUrl('')
-                            }
-                          }} />
-                        </Button>
-                      </ButtonGroup>
-                    </Grid>
-                    <Grid item xs={12} lg={6}>
-                      {
-                        logoUrl ?
-                          <Image
-                            src={logoUrl}
-                            width={500}
-                            height={500}
-                            alt={values.name}
-                            id="logoPreview"
-                            layout="responsive"
-                            priority={true}
-                          /> : null
-                      }
-                      <ButtonGroup variant="contained">
-                        <Button component="label" startIcon={<CloudUploadIcon />}>
-                          Upload Logo
-                          <VisuallyHiddenInput type="file" onChange={(event) => {
-                            const file = event.target.files?.[0];
-                            setFieldValue("logo", file);
-                            if (file) {
-                              setLogoUrl(URL.createObjectURL(file))
-                            } else {
-                              setLogoUrl('')
-                            }
-                          }} />
-                        </Button>
-                      </ButtonGroup>
-                    </Grid>
-
-                  </Grid>
-                  {isSubmitting && <LinearProgress />}
-                  <br />
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    fullWidth
-                    disabled={isSubmitting}
-                    onClick={submitForm}
-                  >
-                    Submit
-                  </Button>
-                </Form>
-              )}
-            </Formik>
-          </Grid>
-        </Box>
-      </Modal>
-    )
-  }
-
   if (loading) {
     // Show skeleton loading while data is being fetched
     return (
@@ -446,7 +285,26 @@ const TableSchool = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number,
           Create
         </Button>
       }
-      <ModalAddEdit />
+      <ModalAddEditSchool
+        openAddEdit={openAddEdit}
+        handleCloseAddEdit={handleCloseAddEdit}
+        editId={editId}
+        editIdTranslation={editIdTranslation}
+        params={params}
+        modalStyle={modalStyle}
+        form={form}
+        editSchool={editSchool}
+        editSchoolTranslation={editSchoolTranslation}
+        addSchool={addSchool}
+        addSchoolTranslation={addSchoolTranslation}
+        fetchSchools={fetchSchools}
+        page={Number(page)}
+        limit={Number(limit)}
+        imageUrl={imageUrl}
+        logoUrl={logoUrl}
+        setImageUrl={setImageUrl}
+        setLogoUrl={setLogoUrl}
+      />
       <TableDataNotFound />
     </>;
   }
@@ -471,44 +329,37 @@ const TableSchool = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number,
         </Button>
       }
 
-      <ModalAddEdit />
-      
+      <ModalAddEditSchool
+        openAddEdit={openAddEdit}
+        handleCloseAddEdit={handleCloseAddEdit}
+        editId={editId}
+        editIdTranslation={editIdTranslation}
+        params={params}
+        modalStyle={modalStyle}
+        form={form}
+        editSchool={editSchool}
+        editSchoolTranslation={editSchoolTranslation}
+        addSchool={addSchool}
+        addSchoolTranslation={addSchoolTranslation}
+        fetchSchools={fetchSchools}
+        page={Number(page)}
+        limit={Number(limit)}
+        imageUrl={imageUrl}
+        logoUrl={logoUrl}
+        setImageUrl={setImageUrl}
+        setLogoUrl={setLogoUrl}
+      />
+
       {/* modal view */}
       {resource?.data.includes('view') &&
-        <Modal
-          open={openView}
-          onClose={handleCloseView}
-          aria-labelledby="modal-view-school-title"
-          aria-describedby="modal-view-school-description"
-        >
-          <Box sx={modalStyle}>
-            <Typography id="modal-view-school-title" variant="h6" component="h2">
-              View School
-            </Typography>
-            <Card sx={{ mt: 1 }}>
-              <CardContent>
-                {
-                  imageData.image_url &&
-                  <ImageAvatarPreview
-                    data={imageData}
-                  />
-                }
-                <Typography sx={{ fontSize: 14, marginTop: '10px' }} color="text.secondary" gutterBottom>
-                  CODE ({form.code})
-                </Typography>
-                <Typography variant="h5" gutterBottom>
-                  {form.name} {
-                    form.is_active ?
-                      <Chip label="active" color="success"></Chip> :
-                      <Chip label="disabled" color="error"></Chip>
-                  }
-                </Typography>
-              </CardContent>
-            </Card>
-          </Box>
-        </Modal>
+        <ModalViewSchool
+          openView={openView}
+          handleCloseView={handleCloseView}
+          modalStyle={modalStyle}
+          form={form}
+          imageData={imageData}
+        />
       }
-
 
       <TableContainer component={Paper}>
         <Table sx={{ minWidth: 650 }} aria-label="table">
@@ -541,7 +392,7 @@ const TableSchool = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number,
                       <Button
                         color="warning"
                         onClick={() => {
-                          handleEdit(row);
+                          handleEdit(row.id);
                         }}
                       >
                         <EditIcon />

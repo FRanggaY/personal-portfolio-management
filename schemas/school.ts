@@ -1,5 +1,18 @@
 import * as Yup from 'yup';
 
+export const defaultFormSchool = {
+  id: '',
+  code: '',
+  name: '',
+  name_2nd: '',
+  logo: '',
+  image: '',
+  is_active: false,
+  website_url: '',
+  address: '',
+  description: '',
+}
+
 export const CreateSchoolSchema = Yup.object().shape({
   code: Yup.string()
     .min(1, 'Too Short!')
