@@ -8,6 +8,7 @@ import { TableDataNotFound, TableLoading } from '../../shared/table/table';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import { ModalConfirmation } from '@/components/shared/modal/modal';
 import { toast } from 'sonner';
 import { ResponseGeneralDynamicResource } from '@/types/general';
@@ -390,6 +391,16 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
                         }}
                       >
                         <EditIcon />
+                      </Button>
+                    </Tooltip>
+                  }
+                   {resource?.data.includes('edit') &&
+                    <Tooltip title="Manage Skill">
+                      <Button
+                        color="warning"
+                        href={`/${params.locale}/panel/project/skill/${row.id}`}
+                      >
+                        <WorkspacePremiumIcon />
                       </Button>
                     </Tooltip>
                   }

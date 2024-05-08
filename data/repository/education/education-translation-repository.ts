@@ -126,7 +126,7 @@ export const deleteEducationTranslation = async (token: string, educationId: str
     if (response.status === 200) {
       return 'SUCCESS';
     }
-    else if (response.status === 400 || response.status === 403) {
+    else if (response.status === 400 || response.status === 403 || response.status === 404) {
       const data = await response.json();
       return data.detail;
     }
