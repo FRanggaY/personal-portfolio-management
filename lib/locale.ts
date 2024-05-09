@@ -1,6 +1,13 @@
 import { DataLocale } from "@/types/data_locale";
 
 const engData = {
+  landing: {
+    title: {
+      first: 'Check Your',
+      second: 'portfolio Showcase',
+    },
+    description: 'User friendly personal portfolio'
+  },
   settings: {
     title: 'Settings',
     public_profile: {
@@ -57,6 +64,13 @@ const engData = {
 }
 
 const indData = {
+  landing: {
+    title: {
+      first: 'Lihat',
+      second: 'portfolio Showcase',
+    },
+    description: 'Manajemen portfolio pribadi'
+  },
   settings: {
     title: 'Pengaturan',
     public_profile: {

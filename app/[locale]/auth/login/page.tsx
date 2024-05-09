@@ -1,12 +1,14 @@
 import * as React from 'react';
-import { Avatar, Box, Typography, Container } from '@mui/material';
+import { Avatar, Box, Typography, Container, Button } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import LoginForm from '@/components/layout/form/auth/login-form';
 import Copyright from '@/components/ui/copyright';
+import { LanguageParams } from '@/types/general';
 
-export default async function Login() {
+export default async function Login({ params }: { readonly params: LanguageParams }) {
   return (
     <Container component="main" maxWidth="xs">
+
       <Box
         sx={{
           marginTop: 8,
@@ -18,12 +20,15 @@ export default async function Login() {
         <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
           <LockOutlinedIcon />
         </Avatar>
+
         <Typography component="h1" variant="h5">
-          Login
+          Login <Button variant='outlined' href={`/${params.locale}`}>
+            PPM
+          </Button>
         </Typography>
       </Box>
       <LoginForm />
-      <Copyright  sx={{ mt: 8, mb: 4 }} />
+      <Copyright sx={{ mt: 8, mb: 4 }} />
     </Container>
   );
 }

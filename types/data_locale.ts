@@ -1,3 +1,11 @@
+interface Landing {
+  title: {
+    first: string,
+    second: string,
+  },
+  description: string
+}
+
 interface Settings {
   title: string;
   public_profile: {
@@ -56,6 +64,7 @@ interface Sidebar {
 
 export interface DataLocale {
   [key: string]: {
+    landing: Landing,
     settings: Settings;
     navbar: Navbar;
     sidebar: Sidebar;

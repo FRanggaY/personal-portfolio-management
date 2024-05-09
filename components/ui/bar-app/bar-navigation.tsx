@@ -6,7 +6,7 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import MenuIcon from '@mui/icons-material/Menu';
 import MuiAppBar from '@mui/material/AppBar';
-import { Avatar, Box, Divider, Grid, IconButton, Menu, MenuItem } from '@mui/material';
+import { Avatar, Box, Button, Divider, Grid, IconButton, Menu, MenuItem } from '@mui/material';
 import { removeAccessToken } from '@/actions/auth/auth-action';
 import { toast } from 'sonner';
 import { AuthProfile } from '@/types/auth';
@@ -54,6 +54,9 @@ export default function BarNavigation({ title, open, toggleDrawer }: any) {
           </IconButton>
         </Tooltip>
 
+        <Button variant='contained' href={`/${params.locale}`}>
+          {title}
+        </Button>
         <Typography
           component="h1"
           variant="h6"
@@ -61,7 +64,6 @@ export default function BarNavigation({ title, open, toggleDrawer }: any) {
           noWrap
           sx={{ flexGrow: 1 }}
         >
-          {title}
         </Typography>
         <Box sx={{ flexGrow: 0 }}>
           <Tooltip title="Account">
