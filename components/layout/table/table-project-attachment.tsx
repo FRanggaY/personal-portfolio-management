@@ -1,26 +1,23 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Button, TablePagination, Tooltip, Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
-import { deleteProject, getProjects, getProjectResource, getProject } from '@/data/repository/project/project-repository';
-import { ResponseProjects, Project } from '@/types/project';
+import { Button, TablePagination, Tooltip, Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow} from '@mui/material';
+import { deleteProjectAttachment, getProjectAttachments, getProjectAttachment } from '@/data/repository/project/project-attachment-repository';
+import { ResponseProjectAttachments, ProjectAttachment } from '@/types/project-attachment';
 import { TableDataNotFound, TableLoading } from '../../shared/table/table';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
-import AttachFileIcon from '@mui/icons-material/AttachFile';
 import { ModalConfirmation } from '@/components/shared/modal/modal';
 import { toast } from 'sonner';
 import { ResponseGeneralDynamicResource } from '@/types/general';
 import { getAccessToken } from '@/actions/auth/auth-action';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { SortableColumn } from '@/components/shared/table/column';
-import { defaultFormProject } from '@/schemas/project';
-import { addProject, editProject } from '@/actions/project/project-action';
-import { ModalAddEditProject, ModalViewProject } from '../modal/modal-project';
-import { getProjectTranslation } from '@/data/repository/project/project-translation-repository';
-import { addProjectTranslation, editProjectTranslation } from '@/actions/project/project-translation-action';
+import { defaultFormProjectAttachment } from '@/schemas/project-attachment';
+import { addProjectAttachment, editProjectAttachment } from '@/actions/project/project-attachment-action';
+import { ModalAddEditProjectAttachment, ModalViewProjectAttachment } from '../modal/modal-project-attachment';
+import { getProjectResource } from '@/data/repository/project/project-repository';
 
 const modalStyle = {
   position: 'absolute',
@@ -34,8 +31,8 @@ const modalStyle = {
   p: 4,
 };
 
-const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, itemsPerPageList: number[] }) => {
-  const [projects, setProjects] = useState<ResponseProjects | null>(null);
+const TableProjectAttachment = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, itemsPerPageList: number[] }) => {
+  const [projectAttachments, setProjectAttachments] = useState<ResponseProjectAttachments | null>(null);
   const [resource, setResource] = useState<ResponseGeneralDynamicResource | null>(null);
   const [isModalConfirmDelete, setIsModalConfirmDelete] = useState({
     id: '',
@@ -44,23 +41,24 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const params = useParams<{ locale: string; }>();
+  const params = useParams<{ locale: string; id: string }>();
   const page = searchParams.get('page') ?? 1;
   let limit = searchParams.get('limit') ?? itemsPerPage;
   const sortBy = searchParams.get('sort_by') ?? "name";
   const sortOrder = searchParams.get('sort_order') ?? "asc";
   // add and edit
   const [editId, setEditId] = useState('');
-  const [editIdTranslation, setEditIdTranslation] = useState('');
-  const [form, setForm] = useState(defaultFormProject)
+  const [form, setForm] = useState(defaultFormProjectAttachment);
 
   const [openAddEdit, setOpenAddEdit] = React.useState(false);
   const handleOpenAddEdit = () => setOpenAddEdit(true);
   const handleCloseAddEdit = () => {
     setOpenAddEdit(false);
     setEditId('');
-    setEditIdTranslation('');
-    setForm(defaultFormProject)
+    setForm(defaultFormProjectAttachment => ({
+      ...defaultFormProjectAttachment,
+      project_id: params.id,
+    }));
   };
   // view
   const [imageData, setImageData] = useState({
@@ -71,7 +69,10 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
   const handleOpenView = () => setOpenView(true);
   const handleCloseView = () => {
     setOpenView(false);
-    setForm(defaultFormProject)
+    setForm(defaultFormProjectAttachment => ({
+      ...defaultFormProjectAttachment,
+      project_id: params.id,
+    }));
     setImageData({
       name: '',
       image_url: '',
@@ -79,7 +80,6 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
   };
 
   const [imageUrl, setImageUrl] = useState<string>('');
-  const [logoUrl, setLogoUrl] = useState<string>('');
 
   // put default to base limit if that outside range
   let parsedLimit = Number(limit);
@@ -87,21 +87,21 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
     limit = itemsPerPage;
   }
 
-  const fetchProjects = async (offset: number, size: number) => {
+  const fetchProjectAttachments = async (offset: number, size: number) => {
     setLoading(true);
     try {
       const accessToken = await getAccessToken();
       if (accessToken) {
-        const projectsData: ResponseProjects = await getProjects(accessToken.value, {
+        const projectAttachmentsData: ResponseProjectAttachments = await getProjectAttachments(accessToken.value, {
           offset: offset,
           size: size,
           sort_by: sortBy,
           sort_order: sortOrder,
         });
-        setProjects(projectsData);
+        setProjectAttachments(projectAttachmentsData);
       }
     } catch (error) {
-      console.error("Error fetching projects:", error);
+      console.error("Error fetching projectAttachments:", error);
     } finally {
       // reset
       setLoading(false);
@@ -128,83 +128,61 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
   const handleEdit = async (id: string) => {
     const accessToken = await getAccessToken();
     if (accessToken) {
-      const data = await getProject(accessToken.value, id);
+      const data = await getProjectAttachment(accessToken.value, id);
       if (Object.keys(data.data).length > 0) {
         const result = data.data;
         setForm({
           id: result.id,
+          project_id: params.id,
           title: result.title,
-          title_2nd: '',
+          description: result.description ?? '',
           is_active: result.is_active ?? false,
+          category: result.category,
+          website_url: result.website_url ?? '',
           image: '',
-          logo: '',
-          description: '',
         })
-        setEditId(result.id);
         setImageUrl(result.image_url);
-        setLogoUrl(result.logo_url);
+        setEditId(result.id);
       }
 
-      const dataTranslation = await getProjectTranslation(accessToken.value, id, params.locale);
-      if (Object.keys(dataTranslation.data).length > 0) {
-        const result = dataTranslation.data;
-        setForm(prevForm => ({
-          ...prevForm,
-          description: result.description ?? '',
-          title_2nd: result.title ?? '',
-        }));
-        setEditIdTranslation(result.id);
-      } else {
-        setEditIdTranslation('');
-      }
       handleOpenAddEdit();
     }
-    handleOpenAddEdit();
   };
 
   // handle view
   const handleView = async (id: string) => {
     const accessToken = await getAccessToken();
     if (accessToken) {
-      const data = await getProject(accessToken.value, id);
+      const data = await getProjectAttachment(accessToken.value, id);
       if (Object.keys(data.data).length > 0) {
         const result = data.data;
         setForm({
           id: result.id,
+          project_id: params.id,
           title: result.title,
-          title_2nd: '',
+          description: result.description ?? '',
           is_active: result.is_active ?? false,
+          category: result.category,
+          website_url: result.website_url ?? '',
           image: '',
-          logo: '',
-          description: '',
         })
         setImageData({
           name: result.name,
-          image_url: result.logo_url
+          image_url: result.image_url
         })
-      }
-      const dataTranslation = await getProjectTranslation(accessToken.value, id, params.locale);
-      if (Object.keys(dataTranslation.data).length > 0) {
-        const result = dataTranslation.data;
-        setForm(prevForm => ({
-          ...prevForm,
-          description: result.description ?? '',
-          title_2nd: result.title ?? '',
-        }));
-        setEditIdTranslation(result.id);
       }
       handleOpenView();
     }
   };
 
-  const handleDeleteProject = async () => {
+  const handleDeleteProjectAttachment = async () => {
     setLoading(true);
     try {
       const accessToken = await getAccessToken();
       if (accessToken) {
-        const data = await deleteProject(accessToken.value, isModalConfirmDelete.id)
+        const data = await deleteProjectAttachment(accessToken.value, isModalConfirmDelete.id)
         if (data == 'SUCCESS') {
-          toast.success('project deleted successfully');
+          toast.success('project-attachment deleted successfully');
 
           const params = new URLSearchParams(searchParams);
           params.set("page", String(1));
@@ -222,13 +200,13 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
       })
       setLoading(false);
     } catch (error) {
-      console.error("Error deleting project:", error);
-      toast.error('project deleted failed');
+      console.error("Error deleting project-attachment:", error);
+      toast.error('project-attachment deleted failed');
     }
   }
 
   useEffect(() => {
-    fetchProjects(Number(page), Number(limit),);
+    fetchProjectAttachments(Number(page), Number(limit),);
   }, [page, limit, sortBy, sortOrder]);
 
   useEffect(() => {
@@ -265,7 +243,7 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
     );
   }
 
-  if (!projects || projects?.data?.length === 0) {
+  if (!projectAttachments || projectAttachments?.data?.length === 0) {
     return <>
       {
         resource?.data.includes('create') &&
@@ -273,7 +251,6 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
           variant="contained"
           onClick={() => {
             setImageUrl('');
-            setLogoUrl('');
             handleOpenAddEdit();
           }}
           disabled={loading}
@@ -281,31 +258,25 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
           Create
         </Button>
       }
-      <ModalAddEditProject
+      <ModalAddEditProjectAttachment
         openAddEdit={openAddEdit}
         handleCloseAddEdit={handleCloseAddEdit}
         editId={editId}
-        editIdTranslation={editIdTranslation}
-        params={params}
         modalStyle={modalStyle}
         form={form}
-        editProject={editProject}
-        editProjectTranslation={editProjectTranslation}
-        addProject={addProject}
-        addProjectTranslation={addProjectTranslation}
-        fetchProjects={fetchProjects}
+        editProjectAttachment={editProjectAttachment}
+        addProjectAttachment={addProjectAttachment}
+        fetchProjectAttachments={fetchProjectAttachments}
         page={Number(page)}
         limit={Number(limit)}
         imageUrl={imageUrl}
-        logoUrl={logoUrl}
         setImageUrl={setImageUrl}
-        setLogoUrl={setLogoUrl}
       />
       <TableDataNotFound />
     </>;
   }
 
-  const { data, meta } = projects;
+  const { data, meta } = projectAttachments;
 
   return (
     <>
@@ -316,7 +287,6 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
           variant="contained"
           onClick={() => {
             setImageUrl('');
-            setLogoUrl('');
             handleOpenAddEdit();
           }}
           disabled={loading}
@@ -325,30 +295,24 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
         </Button>
       }
 
-      <ModalAddEditProject
+      <ModalAddEditProjectAttachment
         openAddEdit={openAddEdit}
         handleCloseAddEdit={handleCloseAddEdit}
         editId={editId}
-        editIdTranslation={editIdTranslation}
-        params={params}
         modalStyle={modalStyle}
         form={form}
-        editProject={editProject}
-        editProjectTranslation={editProjectTranslation}
-        addProject={addProject}
-        addProjectTranslation={addProjectTranslation}
-        fetchProjects={fetchProjects}
+        editProjectAttachment={editProjectAttachment}
+        addProjectAttachment={addProjectAttachment}
+        fetchProjectAttachments={fetchProjectAttachments}
         page={Number(page)}
         limit={Number(limit)}
         imageUrl={imageUrl}
-        logoUrl={logoUrl}
         setImageUrl={setImageUrl}
-        setLogoUrl={setLogoUrl}
       />
 
       {/* modal view */}
       {resource?.data.includes('view') &&
-        <ModalViewProject
+        <ModalViewProjectAttachment
           openView={openView}
           handleCloseView={handleCloseView}
           modalStyle={modalStyle}
@@ -363,12 +327,14 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
           <TableHead>
             <TableRow>
               <TableCell align="left">ACTION</TableCell>
-              <SortableColumn columnKey="title" label="Title" sortBy={sortBy} sortOrder={sortOrder} router={router} searchParams={searchParams} />
+              <SortableColumn columnKey="title" label="TITLE" sortBy={sortBy} sortOrder={sortOrder} router={router} searchParams={searchParams} />
+              <SortableColumn columnKey="description" label="DESCRIPTION" sortBy={sortBy} sortOrder={sortOrder} router={router} searchParams={searchParams} />
+              <SortableColumn columnKey="category" label="CATEGORY" sortBy={sortBy} sortOrder={sortOrder} router={router} searchParams={searchParams} />
               <SortableColumn columnKey="is_active" label="STATUS" sortBy={sortBy} sortOrder={sortOrder} router={router} searchParams={searchParams} />
             </TableRow>
           </TableHead>
           <TableBody>
-            {data?.map((row: Project) => (
+            {data?.map((row: ProjectAttachment) => (
               <TableRow key={row.id} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                 <TableCell align="center">
                   {resource?.data.includes('view') &&
@@ -395,26 +361,6 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
                       </Button>
                     </Tooltip>
                   }
-                   {resource?.data.includes('edit') &&
-                    <Tooltip title="Manage Skill">
-                      <Button
-                        color="warning"
-                        href={`/${params.locale}/panel/project/skill/${row.id}`}
-                      >
-                        <WorkspacePremiumIcon />
-                      </Button>
-                    </Tooltip>
-                  }
-                   {resource?.data.includes('edit') &&
-                    <Tooltip title="Manage Attachment">
-                      <Button
-                        color="warning"
-                        href={`/${params.locale}/panel/project/attachment/${row.id}`}
-                      >
-                        <AttachFileIcon />
-                      </Button>
-                    </Tooltip>
-                  }
                   {resource?.data.includes('delete') &&
                     <Tooltip title="Delete">
                       <Button
@@ -430,6 +376,8 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
                   }
                 </TableCell>
                 <TableCell align="left">{row.title}</TableCell>
+                <TableCell align="left">{row.description}</TableCell>
+                <TableCell align="left">{row.category}</TableCell>
                 <TableCell align="left">
                   {
                     row.is_active ?
@@ -464,11 +412,11 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
           id: '',
           show: false,
         })}
-        onOk={handleDeleteProject}
+        onOk={handleDeleteProjectAttachment}
         loading={loading}
       />
     </>
   );
 };
 
-export default TableProject;
+export default TableProjectAttachment;

@@ -14,7 +14,7 @@ function BarApp() {
   return (
     <>
       <BarNavigation
-        title={'GatSource Task'}
+        title={'PPM'}
         open={open}
         toggleDrawer={toggleDrawer}
       />

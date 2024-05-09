@@ -302,7 +302,7 @@ const TableProjectSkill = ({ itemsPerPage }: { itemsPerPage: number }) => {
           <TableHead>
             <TableRow>
               <TableCell align="left">ACTION</TableCell>
-              <TableCell align="left">Title</TableCell>
+              <TableCell align="left">SKILL</TableCell>
               <TableCell align="left">STATUS</TableCell>
             </TableRow>
           </TableHead>
