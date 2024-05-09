@@ -102,6 +102,8 @@ export const ModalAddEditSchool: React.FC<ModalAddEditProps> = ({
                   } else {
                     toast.error(message)
                   }
+                } else {
+                  toast.error(message);
                 }
 
               } else { // create new school

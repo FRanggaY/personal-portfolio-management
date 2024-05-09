@@ -69,6 +69,7 @@ export const ModalAddEditProject: React.FC<ModalAddEditProps> = ({
 
               const formData = new FormData();
               formData.append('title', `${values.title}`);
+              formData.append('slug', `${values.slug}`);
               formData.append('image', values.image);
               formData.append('logo', values.logo);
 
@@ -99,6 +100,8 @@ export const ModalAddEditProject: React.FC<ModalAddEditProps> = ({
                   } else {
                     toast.error(message)
                   }
+                } else {
+                  toast.error(message);
                 }
 
               } else { // create new project
@@ -124,6 +127,16 @@ export const ModalAddEditProject: React.FC<ModalAddEditProps> = ({
                       name="title"
                       type="text"
                       label="Title"
+                      fullWidth
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Field
+                      id="projectSlugInput"
+                      component={TextField}
+                      name="slug"
+                      type="text"
+                      label="Slug"
                       fullWidth
                     />
                   </Grid>

@@ -93,6 +93,8 @@ export const ModalAddEditEducation: React.FC<ModalAddEditProps> = ({
                   } else {
                     toast.error(message)
                   }
+                } else {
+                  toast.error(message);
                 }
 
               } else { // create new education

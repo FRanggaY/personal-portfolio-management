@@ -99,6 +99,8 @@ export const ModalAddEditSolution: React.FC<ModalAddEditProps> = ({
                   } else {
                     toast.error(message)
                   }
+                } else {
+                  toast.error(message);
                 }
 
               } else { // create new solution

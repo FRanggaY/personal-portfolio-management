@@ -1,6 +1,7 @@
 export interface Project {
   id: string;
   title: string;
+  slug: string;
   image_url: string;
   logo_url: string;
   is_active: boolean;

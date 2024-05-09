@@ -102,6 +102,8 @@ export const ModalAddEditCompany: React.FC<ModalAddEditProps> = ({
                   } else {
                     toast.error(message)
                   }
+                } else {
+                  toast.error(message);
                 }
 
               } else { // create new company

@@ -134,6 +134,7 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
         setForm({
           id: result.id,
           title: result.title,
+          slug: result.slug,
           title_2nd: '',
           is_active: result.is_active ?? false,
           image: '',
@@ -173,6 +174,7 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
           id: result.id,
           title: result.title,
           title_2nd: '',
+          slug: result.slug,
           is_active: result.is_active ?? false,
           image: '',
           logo: '',
