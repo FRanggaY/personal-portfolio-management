@@ -173,7 +173,7 @@ const TableExperience = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: num
           title: result.title,
           title_2nd: '',
           started_at: result.started_at,
-          finished_at: result.finished_at,
+          finished_at: result.finished_at ?? '',
           is_active: result.is_active ?? false,
           employee_type: '',
           location: '',

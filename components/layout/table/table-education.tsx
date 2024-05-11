@@ -173,7 +173,7 @@ const TableEducation = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: numb
           title: result.title,
           title_2nd: '',
           started_at: result.started_at,
-          finished_at: result.finished_at,
+          finished_at: result.finished_at ?? '',
           is_active: result.is_active ?? false,
           field_of_study: '',
           degree: '',

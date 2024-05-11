@@ -44,7 +44,7 @@ export const EditEducationSchema = Yup.object().shape({
   started_at: Yup.string()
     .required('Required'),
   finished_at: Yup.string()
-    .required('Required'),
+    .nullable(''),
   is_active: Yup.boolean()
     .nullable(),
   degree: Yup.string()

@@ -57,7 +57,7 @@ export const EditExperienceSchema = Yup.object().shape({
   started_at: Yup.string()
     .required('Required'),
   finished_at: Yup.string()
-    .required('Required'),
+    .nullable(''),
   is_active: Yup.boolean()
     .nullable(),
   description: Yup.string()
