@@ -263,7 +263,7 @@ const TableSkillMapping = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: n
         Back
       </Button>
       {
-        resource?.data.includes('create_skill') &&
+        resource?.data.includes('create_skill_mapping') &&
         <Button
           variant="contained"
           onClick={() => {
@@ -304,7 +304,7 @@ const TableSkillMapping = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: n
         Back
       </Button>
       {
-        resource?.data.includes('create_skill') &&
+        resource?.data.includes('create_skill_mapping') &&
         <Button
           variant="contained"
           onClick={() => {
@@ -331,7 +331,7 @@ const TableSkillMapping = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: n
       />
 
       {/* modal view */}
-      {resource?.data.includes('view_skill') &&
+      {resource?.data.includes('view_skill_mapping') &&
         <ModalViewSkillMapping
           openView={openView}
           handleCloseView={handleCloseView}
@@ -353,7 +353,7 @@ const TableSkillMapping = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: n
             {data?.map((row: SkillMapping) => (
               <TableRow key={row.id} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                 <TableCell align="center">
-                  {resource?.data.includes('view_skill') &&
+                  {resource?.data.includes('view_skill_mapping') &&
                     <Tooltip title="View">
                       <Button
                         color="info"
@@ -365,7 +365,7 @@ const TableSkillMapping = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: n
                       </Button>
                     </Tooltip>
                   }
-                  {resource?.data.includes('edit_skill') &&
+                  {resource?.data.includes('edit_skill_mapping') &&
                     <Tooltip title="Edit">
                       <Button
                         color="warning"
@@ -377,7 +377,7 @@ const TableSkillMapping = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: n
                       </Button>
                     </Tooltip>
                   }
-                  {resource?.data.includes('delete_skill') &&
+                  {resource?.data.includes('delete_skill_mapping') &&
                     <Tooltip title="Delete">
                       <Button
                         onClick={() => setIsModalConfirmDelete({
