@@ -28,7 +28,7 @@ export const CreateExperienceSchema = Yup.object().shape({
   started_at: Yup.string()
     .required('Required'),
   finished_at: Yup.string()
-    .required('Required'),
+    .nullable(''),
 });
 
 export const EditExperienceSchema = Yup.object().shape({
