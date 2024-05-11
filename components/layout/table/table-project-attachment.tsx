@@ -55,6 +55,7 @@ const TableProjectAttachment = ({ itemsPerPage, itemsPerPageList }: { itemsPerPa
   const handleCloseAddEdit = () => {
     setOpenAddEdit(false);
     setEditId('');
+    setForm(defaultFormProjectAttachment);
     setForm(defaultFormProjectAttachment => ({
       ...defaultFormProjectAttachment,
       project_id: params.id,
@@ -69,6 +70,7 @@ const TableProjectAttachment = ({ itemsPerPage, itemsPerPageList }: { itemsPerPa
   const handleOpenView = () => setOpenView(true);
   const handleCloseView = () => {
     setOpenView(false);
+    setForm(defaultFormProjectAttachment);
     setForm(defaultFormProjectAttachment => ({
       ...defaultFormProjectAttachment,
       project_id: params.id,
