@@ -100,6 +100,10 @@ const TableProjectAttachment = ({ itemsPerPage, itemsPerPageList }: { itemsPerPa
         });
         setProjectAttachments(projectAttachmentsData);
       }
+      setForm(defaultFormProjectAttachment => ({
+        ...defaultFormProjectAttachment,
+        project_id: params.id,
+      }));
     } catch (error) {
       console.error("Error fetching projectAttachments:", error);
     } finally {
