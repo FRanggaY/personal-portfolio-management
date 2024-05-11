@@ -95,6 +95,7 @@ const TableProjectAttachment = ({ itemsPerPage, itemsPerPageList }: { itemsPerPa
       const accessToken = await getAccessToken();
       if (accessToken) {
         const projectAttachmentsData: ResponseProjectAttachments = await getProjectAttachments(accessToken.value, {
+          project_id: params.id,
           offset: offset,
           size: size,
           sort_by: sortBy,
