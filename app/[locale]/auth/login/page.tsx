@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Avatar, Box, Typography, Container, Button } from '@mui/material';
+import { Avatar, Box, Typography, Container, Button, Link } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import LoginForm from '@/components/layout/form/auth/login-form';
 import Copyright from '@/components/ui/copyright';
@@ -21,10 +21,11 @@ export default async function Login({ params }: { readonly params: LanguageParam
           <LockOutlinedIcon />
         </Avatar>
 
+        <Link href={'/'} style={{ textDecoration: 'none' }}>
+          PPM
+        </Link>
         <Typography component="h1" variant="h5">
-          Login <Button variant='outlined' href={`/${params.locale}`}>
-            PPM
-          </Button>
+          Login
         </Typography>
       </Box>
       <LoginForm />

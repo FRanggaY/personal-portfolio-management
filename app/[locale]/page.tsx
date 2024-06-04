@@ -4,6 +4,7 @@ import { getAccessToken } from '@/actions/auth/auth-action';
 import Navbar from '@/components/ui/nav-bar/navbar';
 import Hero from '@/components/ui/hero';
 import { dataLocale, validLocale } from '@/lib/locale';
+import DetailProfile from '@/components/ui/detail-profile';
 
 export default async function Home({ params }: { readonly params: LanguageParams }) {
   const accessToken = await getAccessToken();
@@ -23,6 +24,7 @@ export default async function Home({ params }: { readonly params: LanguageParams
         description={t.description}
       />
       
+      <DetailProfile />
 
     </main>
   );

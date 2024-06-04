@@ -1,12 +1,14 @@
+"use client";
+
 import * as React from 'react';
-import { alpha } from '@mui/material';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
-import Link from '@mui/material/Link';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
+import { useParams, useRouter } from 'next/navigation';
+import { validLocale } from '@/lib/locale';
 
 interface HeroProps {
   titleFirst: string;
@@ -15,6 +17,20 @@ interface HeroProps {
 }
 
 export default function Hero({ titleFirst, titleSecond, description }: HeroProps) {
+  const [username, setUsername] = React.useState('');
+  const router = useRouter();
+  const params = useParams<{ locale: string; }>();
+  const locale = validLocale(params.locale);
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
+    setUsername(event.target.value);
+  };
+
+  const handleSubmit = (event: React.FormEvent): void => {
+    event.preventDefault();
+    router.replace(`/${locale}?username=${encodeURIComponent(username)}`);
+  };
+
   return (
     <Box
     >
@@ -29,27 +45,28 @@ export default function Hero({ titleFirst, titleSecond, description }: HeroProps
       >
         <Stack spacing={2} useFlexGap sx={{ width: { xs: '100%', sm: '70%' } }}>
           <Typography
-            variant="h1"
+            gap={2}
+            component="h4"
+            variant="h4"
             sx={{
               display: 'flex',
               flexDirection: { xs: 'column', md: 'row' },
               alignSelf: 'center',
               textAlign: 'center',
-              fontSize: 'clamp(3.5rem, 10vw, 4rem)',
             }}
           >
-            {titleFirst} &nbsp;
-            <Typography
-              component="span"
-              variant="h1"
-            >
-              {titleSecond}
-            </Typography>
+            {titleFirst} <b>{titleSecond}</b>
           </Typography>
           <Typography
-            textAlign="center"
+            variant="subtitle1"
             color="text.secondary"
-            sx={{ alignSelf: 'center', width: { sm: '100%', md: '80%' } }}
+            sx={{
+              display: 'flex',
+              flexDirection: { xs: 'column', md: 'row' },
+              alignSelf: 'center',
+              textAlign: 'center',
+            }}
+            gutterBottom
           >
             {description}
           </Typography>
@@ -60,21 +77,25 @@ export default function Hero({ titleFirst, titleSecond, description }: HeroProps
             useFlexGap
             sx={{ pt: 2, width: { xs: '100%', sm: 'auto' } }}
           >
-            <TextField
-              id="outlined-basic"
-              hiddenLabel
-              size="small"
-              variant="outlined"
-              aria-label="Enter your username"
-              placeholder="Your username"
-              inputProps={{
-                autoComplete: 'off',
-                'aria-label': 'Enter your username',
-              }}
-            />
-            <Button variant="contained" color="primary">
-              Start now
-            </Button>
+            <form onSubmit={handleSubmit}>
+              <TextField
+                id="outlined-basic"
+                hiddenLabel
+                size="small"
+                variant="outlined"
+                aria-label="Enter your username"
+                placeholder="Your username"
+                value={username}
+                onChange={handleInputChange}
+                inputProps={{
+                  autoComplete: 'off',
+                  'aria-label': 'Enter your username',
+                }}
+              />
+              <Button variant="contained" color="primary" type="submit">
+                Find
+              </Button>
+            </form>
           </Stack>
         </Stack>
       </Container>

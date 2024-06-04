@@ -1,4 +1,4 @@
-import { DataLocale } from "@/types/data_locale";
+import { DataLocale } from "@/types/data-locale";
 
 const engData = {
   landing: {

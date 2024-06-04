@@ -84,21 +84,18 @@ function Navbar({ buttonHref, buttonTitle }: NavbarProps) {
             <Box
               sx={{
                 display: { xs: 'none', md: 'flex' },
-                gap: 0.5,
+                gap: 5,
                 alignItems: 'center',
               }}
             >
-
-              <Button sx={{ mt: 2, mb: 2 }}
+              <Button sx={{ mt: 2, mb: 2, px: 5 }}
                 href={buttonHref}
                 variant="contained"
                 color="primary"
               >
                 {buttonTitle}
               </Button>
-
               <EditLanguageForm />
-
             </Box>
             <Box sx={{ display: { sm: '', md: 'none' } }}>
               <Button

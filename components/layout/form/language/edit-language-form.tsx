@@ -18,7 +18,11 @@ const EditLanguageForm = () => {
             id="select-language"
             value={params.locale}
             onChange={(event) => {
-              const replaceUrl = pathName.replace(params.locale, event.target.value)
+              let replaceUrl = pathName.replace(params.locale, event.target.value);
+              
+              if(replaceUrl === '/'){
+                replaceUrl = `/${event.target.value}`;
+              }
               router.replace(replaceUrl);
             }}
           >
