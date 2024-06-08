@@ -75,9 +75,20 @@ export const createEducation = async (token: string, formData: FormData) => {
       body: formData
     });
 
-    if (response.status === 201 || response.status === 400 || response.status === 403 || response.status === 404 || response.status === 422) {
+    if (response.status === 201 || response.status === 400 || response.status === 403 || response.status === 404) {
       const data = await response.json();
       return data;
+    } else if (response.status === 422) {
+      const data = await response.json();
+      if (data.detail[0].msg) {
+        return {
+          detail: data.detail[0].msg
+        }
+      } else {
+        return {
+          detail: 'Failed to when creating data, check your input'
+        }
+      }
     }
     else {
       return {
@@ -105,9 +116,20 @@ export const updateEducation = async (token: string, id: string, formData: FormD
       body: formData
     });
 
-    if (response.status === 200 || response.status === 400 || response.status === 403 || response.status === 404 || response.status === 422) {
+    if (response.status === 200 || response.status === 400 || response.status === 403 || response.status === 404) {
       const data = await response.json();
       return data;
+    } else if (response.status === 422) {
+      const data = await response.json();
+      if (data.detail[0].msg) {
+        return {
+          detail: data.detail[0].msg
+        }
+      } else {
+        return {
+          detail: 'Failed to when updating data, check your input'
+        }
+      }
     }
     else {
       return {

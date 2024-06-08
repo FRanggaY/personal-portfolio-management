@@ -44,13 +44,13 @@ export const createSkillTranslation = async (token: string, formData: FormData) 
     if (response.status === 201 || response.status === 400 || response.status === 403 || response.status === 404) {
       const data = await response.json();
       return data;
-    }else if (response.status === 422) {
+    } else if (response.status === 422) {
       const data = await response.json();
-      if(data.detail[0].msg){
+      if (data.detail[0].msg) {
         return {
           detail: data.detail[0].msg
         }
-      }else{
+      } else {
         return {
           detail: 'Failed to when creating skill-translation, check your input'
         }
@@ -85,13 +85,13 @@ export const updateSkillTranslation = async (token: string, skillId: string, lan
     if (response.status === 200 || response.status === 400 || response.status === 403 || response.status === 404) {
       const data = await response.json();
       return data;
-    }else if (response.status === 422) {
+    } else if (response.status === 422) {
       const data = await response.json();
-      if(data.detail[0].msg){
+      if (data.detail[0].msg) {
         return {
           detail: data.detail[0].msg
         }
-      }else{
+      } else {
         return {
           detail: 'Failed to when updating data, check your input'
         }
