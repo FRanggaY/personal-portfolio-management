@@ -202,6 +202,7 @@ const TableSolution = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: numbe
         const data = await deleteSolution(accessToken.value, isModalConfirmDelete.id)
         if (data == 'SUCCESS') {
           toast.success('solution deleted successfully');
+          fetchSolutions(Number(page), Number(limit),);
 
           const params = new URLSearchParams(searchParams);
           params.set("page", String(1));

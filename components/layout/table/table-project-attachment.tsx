@@ -190,6 +190,7 @@ const TableProjectAttachment = ({ itemsPerPage, itemsPerPageList }: { itemsPerPa
         const data = await deleteProjectAttachment(accessToken.value, isModalConfirmDelete.id)
         if (data == 'SUCCESS') {
           toast.success('project-attachment deleted successfully');
+          fetchProjectAttachments(Number(page), Number(limit),);
 
           const params = new URLSearchParams(searchParams);
           params.set("page", String(1));

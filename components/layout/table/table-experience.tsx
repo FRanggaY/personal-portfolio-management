@@ -248,6 +248,7 @@ const TableExperience = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: num
         const data = await deleteExperience(accessToken.value, isModalConfirmDelete.id)
         if (data == 'SUCCESS') {
           toast.success('experience deleted successfully');
+          fetchExperiences(Number(page), Number(limit),);
 
           const params = new URLSearchParams(searchParams);
           params.set("page", String(1));

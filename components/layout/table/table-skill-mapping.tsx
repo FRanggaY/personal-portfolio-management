@@ -193,6 +193,7 @@ const TableSkillMapping = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: n
         const data = await deleteSkillMapping(accessToken.value, isModalConfirmDelete.id)
         if (data == 'SUCCESS') {
           toast.success('skillMapping deleted successfully');
+          fetchSkillMappings(Number(page), Number(limit),);
 
           const params = new URLSearchParams(searchParams);
           params.set("page", String(1));

@@ -244,6 +244,7 @@ const TableEducation = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: numb
         const data = await deleteEducation(accessToken.value, isModalConfirmDelete.id)
         if (data == 'SUCCESS') {
           toast.success('education deleted successfully');
+          fetchEducations(Number(page), Number(limit),);
 
           const params = new URLSearchParams(searchParams);
           params.set("page", String(1));

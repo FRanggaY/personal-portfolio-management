@@ -122,6 +122,7 @@ const TableProjectSkill = ({ itemsPerPage }: { itemsPerPage: number }) => {
         const data = await deleteProjectSkill(accessToken.value, params.id, isModalConfirmDelete.skill_id)
         if (data == 'SUCCESS') {
           toast.success('project skill deleted successfully');
+          fetchProjectSkills();
 
           const params = new URLSearchParams(searchParams);
           params.set("page", String(1));

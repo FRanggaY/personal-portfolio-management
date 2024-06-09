@@ -209,6 +209,7 @@ const TableCompany = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
       if (accessToken) {
         const data = await deleteCompany(accessToken.value, isModalConfirmDelete.id)
         if (data == 'SUCCESS') {
+          fetchCompanies(Number(page), Number(limit),);
           toast.success('company deleted successfully');
 
           const params = new URLSearchParams(searchParams);

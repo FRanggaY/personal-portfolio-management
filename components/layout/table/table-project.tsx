@@ -207,6 +207,7 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
         const data = await deleteProject(accessToken.value, isModalConfirmDelete.id)
         if (data == 'SUCCESS') {
           toast.success('project deleted successfully');
+          fetchProjects(Number(page), Number(limit),);
 
           const params = new URLSearchParams(searchParams);
           params.set("page", String(1));

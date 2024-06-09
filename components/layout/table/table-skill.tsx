@@ -208,6 +208,7 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
         const data = await deleteSkill(accessToken.value, isModalConfirmDelete.id)
         if (data == 'SUCCESS') {
           toast.success('skill deleted successfully');
+          fetchSkills(Number(page), Number(limit),);
 
           const params = new URLSearchParams(searchParams);
           params.set("page", String(1));
