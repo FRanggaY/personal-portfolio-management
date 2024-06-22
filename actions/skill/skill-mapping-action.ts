@@ -1,6 +1,6 @@
 'use server';
 
-import { createSkillMapping, updateSkillMapping } from "@/data/repository/skill-mapping-repository";
+import { createSkillMapping, updateSkillMapping } from "@/data/repository/skill/skill-mapping-repository";
 import { revalidatePath } from "next/cache";
 import { getAccessToken } from "../auth/auth-action";
 

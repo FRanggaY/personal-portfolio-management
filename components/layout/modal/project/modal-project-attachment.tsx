@@ -1,4 +1,4 @@
-import { CreateProjectAttachmentSchema, EditProjectAttachmentSchema, defaultFormProjectAttachment } from "@/schemas/project-attachment";
+import { CreateProjectAttachmentSchema, EditProjectAttachmentSchema, defaultFormProjectAttachment } from "@/schemas/project/project-attachment";
 import { Modal, Box, Typography, Grid, FormGroup, FormControlLabel, ButtonGroup, Button, LinearProgress, Switch, Card, CardContent, Chip } from "@mui/material";
 import { Formik, Form, Field } from 'formik';
 import { TextField } from 'formik-mui';

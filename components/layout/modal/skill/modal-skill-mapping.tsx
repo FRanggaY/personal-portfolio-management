@@ -1,8 +1,8 @@
-import { CreateSkillMappingSchema, EditSkillMappingSchema, defaultFormSkillMapping } from "@/schemas/skill-mapping";
+import { CreateSkillMappingSchema, EditSkillMappingSchema, defaultFormSkillMapping } from "@/schemas/skill/skill-mapping";
 import { Modal, Box, Typography, Grid, FormGroup, FormControlLabel, Button, LinearProgress, Switch, Card, CardContent, Chip, InputLabel, FormHelperText, MenuItem, Select, FormControl } from "@mui/material";
 import { Formik, Form } from 'formik';
 import { toast } from "sonner";
-import { Skill } from "@/types/skill";
+import { Skill } from "@/types/skill/skill";
 
 interface ModalAddEditProps {
   openAddEdit: boolean;

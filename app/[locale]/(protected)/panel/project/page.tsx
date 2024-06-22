@@ -1,5 +1,5 @@
 import * as React from 'react';
-import TableProject from '@/components/layout/table/table-project';
+import TableProject from '@/components/layout/table/project/table-project';
 import { Typography } from '@mui/material';
 
 

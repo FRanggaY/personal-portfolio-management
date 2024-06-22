@@ -19,7 +19,7 @@ import { usePathname, useParams } from 'next/navigation'
 import { dataLocale, validLocale } from '@/lib/locale';
 import Link from 'next/link'
 
-export default function BarSide({ open, drawerWidth }: any) {
+export default function BarSide({ authProfileData, open, drawerWidth }: any) {
   const params = useParams<{ locale: string; }>();
   const locale = validLocale(params.locale);
   const t = dataLocale[locale].sidebar;
@@ -54,42 +54,50 @@ export default function BarSide({ open, drawerWidth }: any) {
   const barSideData = [
     {
       url: `/${params.locale}/dashboard`,
+      name: 'dashboard',
       title: t.dashboard.title,
       icon: <DashboardIcon />
     },
     {
       url: `/${params.locale}/panel/skill`,
+      name: 'skill',
       title: t.skill.title,
       icon: <WorkspacePremiumIcon />
     },
     {
       url: `/${params.locale}/panel/school`,
+      name: 'school',
       title: t.school.title,
       icon: <LocationCityIcon />
     },
     {
       url: `/${params.locale}/panel/company`,
+      name: 'company',
       title: t.company.title,
       icon: <BusinessIcon />
     },
     {
       url: `/${params.locale}/panel/experience`,
+      name: 'experience',
       title: t.experience.title,
       icon: <BusinessCenterIcon />
     },
     {
       url: `/${params.locale}/panel/education`,
+      name: 'education',
       title: t.education.title,
       icon: <SchoolIcon />
     },
     {
       url: `/${params.locale}/panel/solution`,
+      name: 'solution',
       title: t.solution.title,
       icon: <DriveFileRenameOutlineIcon />
     },
     {
       url: `/${params.locale}/panel/project`,
       title: t.project.title,
+      name: 'project',
       icon: <InventoryIcon />
     },
   ]
@@ -99,7 +107,7 @@ export default function BarSide({ open, drawerWidth }: any) {
       <Toolbar />
       <List component="nav">
         {
-          barSideData.map((data) => {
+          barSideData.filter((data) => authProfileData.profile.view_mode.includes(data.name)).map((data) => {
             return <Link style={{ textDecoration: 'none', color: pathname.includes(data.url) ? 'white' : 'inherit' }} key={data.title} href={`${data.url}`}>
               <ListItemButton
                 sx={{

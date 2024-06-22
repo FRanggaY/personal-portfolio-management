@@ -17,7 +17,8 @@ export interface AuthProfile {
       code: string,
       name: string
     },
-    image_url: string
+    image_url: string,
+    view_mode: string[]
   },
   refresh: () => void;
   theme: string;

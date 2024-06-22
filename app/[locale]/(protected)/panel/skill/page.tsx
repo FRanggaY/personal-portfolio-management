@@ -1,5 +1,5 @@
 import * as React from 'react';
-import TableSkill from '@/components/layout/table/table-skill';
+import TableSkill from '@/components/layout/table/skill/table-skill';
 import { Typography } from '@mui/material';
 
 

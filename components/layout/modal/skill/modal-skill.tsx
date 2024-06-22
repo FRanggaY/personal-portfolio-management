@@ -1,4 +1,4 @@
-import { CreateProjectSchema, EditProjectSchema, defaultFormProject } from "@/schemas/project";
+import { CreateSkillSchema, EditSkillSchema, defaultFormSkill } from "@/schemas/skill/skill";
 import { Modal, Box, Typography, Grid, FormGroup, FormControlLabel, ButtonGroup, Button, LinearProgress, Switch, Card, CardContent, Chip } from "@mui/material";
 import { Formik, Form, Field } from 'formik';
 import { TextField } from 'formik-mui';
@@ -15,12 +15,12 @@ interface ModalAddEditProps {
   editIdTranslation: string | null;
   params: any; // Type according to your needs
   modalStyle: any; // Type according to your needs
-  form: typeof defaultFormProject;
-  editProject: (id: string, data: FormData) => Promise<string>;
-  editProjectTranslation: (id: string, locale: string, data: FormData) => Promise<string>;
-  addProject: (data: FormData) => Promise<string>;
-  addProjectTranslation: (data: FormData) => Promise<string>;
-  fetchProjects: (page: number, limit: number) => void;
+  form: typeof defaultFormSkill;
+  editSkill: (id: string, data: FormData) => Promise<string>;
+  editSkillTranslation: (id: string, locale: string, data: FormData) => Promise<string>;
+  addSkill: (data: FormData) => Promise<string>;
+  addSkillTranslation: (data: FormData) => Promise<string>;
+  fetchSkills: (page: number, limit: number) => void;
   page: number;
   limit: number;
   imageUrl: string;
@@ -29,7 +29,7 @@ interface ModalAddEditProps {
   setLogoUrl: React.Dispatch<React.SetStateAction<string>>;
 }
 
-export const ModalAddEditProject: React.FC<ModalAddEditProps> = ({
+export const ModalAddEditSkill: React.FC<ModalAddEditProps> = ({
   openAddEdit,
   handleCloseAddEdit,
   editId,
@@ -37,11 +37,11 @@ export const ModalAddEditProject: React.FC<ModalAddEditProps> = ({
   params,
   modalStyle,
   form,
-  editProject,
-  editProjectTranslation,
-  addProject,
-  addProjectTranslation,
-  fetchProjects,
+  editSkill,
+  editSkillTranslation,
+  addSkill,
+  addSkillTranslation,
+  fetchSkills,
   page,
   limit,
   imageUrl,
@@ -53,49 +53,51 @@ export const ModalAddEditProject: React.FC<ModalAddEditProps> = ({
     <Modal
       open={openAddEdit}
       onClose={handleCloseAddEdit}
-      aria-labelledby="modal-project-title"
-      aria-describedby="modal-project-description"
+      aria-labelledby="modal-skill-title"
+      aria-describedby="modal-skill-description"
     >
       <Box sx={modalStyle}>
-        <Typography id="modal-project-title" variant="h6" component="h2">
-          {editId ? 'Edit Project' : 'Add Project'}
+        <Typography id="modal-skill-title" variant="h6" component="h2">
+          {editId ? 'Edit Skill' : 'Add Skill'}
         </Typography>
         <Grid container spacing={2} sx={{ mt: 1 }}>
           <Formik
             initialValues={form}
-            validationSchema={editId ? EditProjectSchema : CreateProjectSchema}
+            validationSchema={editId ? EditSkillSchema : CreateSkillSchema}
             onSubmit={async (values, { setSubmitting }) => {
               setSubmitting(false);
 
               const formData = new FormData();
-              formData.append('title', `${values.title}`);
-              formData.append('slug', `${values.slug}`);
+              formData.append('code', `${values.code}`);
+              formData.append('name', `${values.name}`);
+              formData.append('category', `${values.category}`);
+              formData.append('website_url', `${values.website_url}`);
               formData.append('image', values.image);
               formData.append('logo', values.logo);
 
-              if (editId) { // update project
+              if (editId) { // update skill
                 formData.append('is_active', `${values.is_active}`);
 
-                const message = await editProject(editId, formData);
+                const message = await editSkill(editId, formData);
                 if (message === 'SUCCESS') {
 
-                  // project translation
+                  // skill translation
                   const formDataTranslation = new FormData();
-                  formDataTranslation.append('title', `${values.title_2nd}`);
+                  formDataTranslation.append('name', `${values.name_2nd}`);
                   formDataTranslation.append('description', `${values.description}`);
 
                   let message;
                   if (editIdTranslation) {
-                    message = await editProjectTranslation(editId, params.locale, formDataTranslation)
+                    message = await editSkillTranslation(editId, params.locale, formDataTranslation)
                   } else {
-                    formDataTranslation.append('project_id', editId);
+                    formDataTranslation.append('skill_id', editId);
                     formDataTranslation.append('language_id', params.locale);
-                    message = await addProjectTranslation(formDataTranslation)
+                    message = await addSkillTranslation(formDataTranslation)
                   }
 
                   if (message === 'SUCCESS') {
-                    fetchProjects(Number(page), Number(limit),);
-                    toast.success('project updated successfully');
+                    fetchSkills(Number(page), Number(limit),);
+                    toast.success('skill updated successfully');
                     handleCloseAddEdit()
                   } else {
                     toast.error(message)
@@ -104,12 +106,12 @@ export const ModalAddEditProject: React.FC<ModalAddEditProps> = ({
                   toast.error(message);
                 }
 
-              } else { // create new project
-                const message = await addProject(formData);
+              } else { // create new skill
+                const message = await addSkill(formData);
                 if (message === 'SUCCESS') {
-                  fetchProjects(Number(page), Number(limit),);
+                  fetchSkills(Number(page), Number(limit),);
                   handleCloseAddEdit()
-                  toast.success('project created successfully');
+                  toast.success('skill created successfully');
                 } else {
                   toast.error(message)
                 }
@@ -122,37 +124,37 @@ export const ModalAddEditProject: React.FC<ModalAddEditProps> = ({
                 <Grid container spacing={2}>
                   <Grid item xs={12}>
                     <Field
-                      id="projectTitleInput"
+                      id="skillCodeInput"
                       component={TextField}
-                      name="title"
+                      name="code"
                       type="text"
-                      label="Title"
+                      label="Code"
                       fullWidth
                     />
                   </Grid>
                   <Grid item xs={12}>
                     <Field
-                      id="projectSlugInput"
+                      id="skillNameInput"
                       component={TextField}
-                      name="slug"
+                      name="name"
                       type="text"
-                      label="Slug"
+                      label="Name"
                       fullWidth
                     />
                   </Grid>
                   {editId && <Grid item xs={12}>
                     <Field
-                      id="projectTitle2NdInput"
+                      id="skillName2NdInput"
                       component={TextField}
-                      name="title_2nd"
+                      name="name_2nd"
                       type="text"
-                      label="Title_2nd"
+                      label="Name_2nd"
                       fullWidth
                     />
                   </Grid>}
                   {editId && <Grid item xs={12}>
                     <Field
-                      id="projectDescriptionInput"
+                      id="skillDescriptionInput"
                       component={TextField}
                       name="description"
                       type="text"
@@ -160,6 +162,24 @@ export const ModalAddEditProject: React.FC<ModalAddEditProps> = ({
                       fullWidth
                     />
                   </Grid>}
+                  <Grid item xs={12}>
+                    <Field
+                      id="skillCategory"
+                      component={TextField}
+                      name="category"
+                      label="Category"
+                      fullWidth
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Field
+                      id="skillWebsiteUrl"
+                      component={TextField}
+                      name="website_url"
+                      label="Website URL"
+                      fullWidth
+                    />
+                  </Grid>
                   {editId && <Grid item xs={12}>
                     <FormGroup>
                       <FormControlLabel control={
@@ -181,7 +201,7 @@ export const ModalAddEditProject: React.FC<ModalAddEditProps> = ({
                           src={imageUrl}
                           width={500}
                           height={500}
-                          alt={values.title}
+                          alt={values.name}
                           id="imagePreview"
                           layout="responsive"
                           priority={true}
@@ -190,7 +210,7 @@ export const ModalAddEditProject: React.FC<ModalAddEditProps> = ({
                     <ButtonGroup variant="contained">
                       <Button component="label" startIcon={<CloudUploadIcon />}>
                         Upload Image
-                        <VisuallyHiddenInput type="file" style={{ display: 'none' }} onChange={(event) => {
+                        <VisuallyHiddenInput type="file" onChange={(event) => {
                           const file = event.target.files?.[0];
                           setFieldValue("image", file);
                           if (file) {
@@ -209,7 +229,7 @@ export const ModalAddEditProject: React.FC<ModalAddEditProps> = ({
                           src={logoUrl}
                           width={500}
                           height={500}
-                          alt={values.title}
+                          alt={values.name}
                           id="logoPreview"
                           layout="responsive"
                           priority={true}
@@ -261,11 +281,11 @@ interface ModalViewProps {
   openView: boolean;
   handleCloseView: () => void;
   modalStyle: any; // Type according to your needs
-  form: typeof defaultFormProject;
+  form: typeof defaultFormSkill;
   imageData: ImageDataProp,
 }
 
-export const ModalViewProject: React.FC<ModalViewProps> = ({
+export const ModalViewSkill: React.FC<ModalViewProps> = ({
   openView,
   handleCloseView,
   modalStyle,
@@ -276,12 +296,12 @@ export const ModalViewProject: React.FC<ModalViewProps> = ({
     <Modal
       open={openView}
       onClose={handleCloseView}
-      aria-labelledby="modal-view-project-title"
-      aria-describedby="modal-view-project-description"
+      aria-labelledby="modal-view-skill-title"
+      aria-describedby="modal-view-skill-description"
     >
       <Box sx={modalStyle}>
-        <Typography id="modal-view-project-title" variant="h6" component="h2">
-          View Project
+        <Typography id="modal-view-skill-title" variant="h6" component="h2">
+          View Skill
         </Typography>
         <Card sx={{ mt: 1 }}>
           <CardContent>
@@ -291,15 +311,18 @@ export const ModalViewProject: React.FC<ModalViewProps> = ({
                 data={imageData}
               />
             }
+            <Typography sx={{ fontSize: 14, marginTop: '10px' }} color="text.secondary" gutterBottom>
+              CODE ({form.code})
+            </Typography>
             <Typography variant="h5" gutterBottom>
-              {form.title} {
+              {form.name} {
                 form.is_active ?
                   <Chip label="active" color="success"></Chip> :
                   <Chip label="disabled" color="error"></Chip>
               }
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {form.title_2nd} {form.description}
+              {form.name_2nd} {form.category} {form.description}
             </Typography>
           </CardContent>
         </Card>

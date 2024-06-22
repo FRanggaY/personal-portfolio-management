@@ -6,20 +6,17 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import MenuIcon from '@mui/icons-material/Menu';
 import MuiAppBar from '@mui/material/AppBar';
-import { Avatar, Box, Button, Divider, Grid, IconButton, Link, Menu, MenuItem } from '@mui/material';
+import { Avatar, Box, Divider, Grid, IconButton, Link, Menu, MenuItem } from '@mui/material';
 import { removeAccessToken } from '@/actions/auth/auth-action';
 import { toast } from 'sonner';
-import { AuthProfile } from '@/types/auth';
 import { useRouter, useParams } from 'next/navigation'
-import { useAuthProfile } from '@/context/AuthProfileContext';
 import { dataLocale, validLocale } from '@/lib/locale';
 
-export default function BarNavigation({ title, open, toggleDrawer }: any) {
+export default function BarNavigation({ authProfileData, title, open, toggleDrawer }: any) {
   const params = useParams<{ locale: string; }>();
   const locale = validLocale(params.locale);
   const t = dataLocale[locale].navbar;
   const router = useRouter();
-  const authProfileData: AuthProfile = useAuthProfile();
   const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(null);
 
   const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
@@ -29,12 +26,6 @@ export default function BarNavigation({ title, open, toggleDrawer }: any) {
   const handleCloseUserMenu = () => {
     setAnchorElUser(null);
   };
-
-  if (!authProfileData.profile) {
-    return <MuiAppBar>
-      <Toolbar></Toolbar>
-    </MuiAppBar>
-  }
 
   return (
     <MuiAppBar style={{ zIndex: 2 }}>

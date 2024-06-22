@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { Button, Typography } from '@mui/material';
-import { ResponseProject } from '@/types/project';
+import { ResponseProject } from '@/types/project/project';
 import { getAccessToken } from '@/actions/auth/auth-action';
 import { getProject } from '@/data/repository/project/project-repository';
-import TableProjectAttachment from '@/components/layout/table/table-project-attachment';
+import TableProjectAttachment from '@/components/layout/table/project/table-project-attachment';
 
 
 export default async function ProjectAttachment({

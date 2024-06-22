@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Button, TablePagination, Tooltip, Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow} from '@mui/material';
-import { deleteProjectAttachment, getProjectAttachments, getProjectAttachment } from '@/data/repository/project/project-attachment-repository';
-import { ResponseProjectAttachments, ProjectAttachment } from '@/types/project-attachment';
-import { TableDataNotFound, TableLoading } from '../../shared/table/table';
+import { Button, TablePagination, Tooltip, Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import { deleteSkillMapping, getSkillMappings, getSkillMapping } from '@/data/repository/skill/skill-mapping-repository';
+import { getSkills, getSkillResource } from '@/data/repository/skill/skill-repository';
+import { ResponseSkillMappings, SkillMapping } from '@/types/skill/skill-mapping';
+import { TableDataNotFound, TableLoading } from '../../../shared/table/table';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -12,12 +13,12 @@ import { ModalConfirmation } from '@/components/shared/modal/modal';
 import { toast } from 'sonner';
 import { ResponseGeneralDynamicResource } from '@/types/general';
 import { getAccessToken } from '@/actions/auth/auth-action';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import { SortableColumn } from '@/components/shared/table/column';
-import { defaultFormProjectAttachment } from '@/schemas/project-attachment';
-import { addProjectAttachment, editProjectAttachment } from '@/actions/project/project-attachment-action';
-import { ModalAddEditProjectAttachment, ModalViewProjectAttachment } from '../modal/modal-project-attachment';
-import { getProjectResource } from '@/data/repository/project/project-repository';
+import { defaultFormSkillMapping } from '@/schemas/skill/skill-mapping';
+import { addSkillMapping, editSkillMapping } from '@/actions/skill/skill-mapping-action';
+import { Skill, ResponseSkills } from '@/types/skill/skill';
+import { ModalAddEditSkillMapping, ModalViewSkillMapping } from '../../modal/skill/modal-skill-mapping';
 
 const modalStyle = {
   position: 'absolute',
@@ -31,57 +32,40 @@ const modalStyle = {
   p: 4,
 };
 
-const TableProjectAttachment = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, itemsPerPageList: number[] }) => {
-  const [projectAttachments, setProjectAttachments] = useState<ResponseProjectAttachments | null>(null);
+const TableSkillMapping = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, itemsPerPageList: number[] }) => {
+  const [skillMappings, setSkillMappings] = useState<ResponseSkillMappings | null>(null);
   const [resource, setResource] = useState<ResponseGeneralDynamicResource | null>(null);
   const [isModalConfirmDelete, setIsModalConfirmDelete] = useState({
     id: '',
     show: false,
   });
   const [loading, setLoading] = useState(true);
+  const [skills, setSkills] = useState<Skill[] | null>(null);
   const router = useRouter();
+  const params = useParams<{ locale: string; }>();
   const searchParams = useSearchParams();
-  const params = useParams<{ locale: string; id: string }>();
   const page = searchParams.get('page') ?? 1;
   let limit = searchParams.get('limit') ?? itemsPerPage;
   const sortBy = searchParams.get('sort_by') ?? "name";
   const sortOrder = searchParams.get('sort_order') ?? "asc";
   // add and edit
   const [editId, setEditId] = useState('');
-  const [form, setForm] = useState(defaultFormProjectAttachment);
+  const [form, setForm] = useState(defaultFormSkillMapping)
 
   const [openAddEdit, setOpenAddEdit] = React.useState(false);
   const handleOpenAddEdit = () => setOpenAddEdit(true);
   const handleCloseAddEdit = () => {
     setOpenAddEdit(false);
     setEditId('');
-    setForm(defaultFormProjectAttachment);
-    setForm(defaultFormProjectAttachment => ({
-      ...defaultFormProjectAttachment,
-      project_id: params.id,
-    }));
+    setForm(defaultFormSkillMapping)
   };
   // view
-  const [imageData, setImageData] = useState({
-    name: '',
-    image_url: '',
-  })
   const [openView, setOpenView] = React.useState(false);
   const handleOpenView = () => setOpenView(true);
   const handleCloseView = () => {
     setOpenView(false);
-    setForm(defaultFormProjectAttachment);
-    setForm(defaultFormProjectAttachment => ({
-      ...defaultFormProjectAttachment,
-      project_id: params.id,
-    }));
-    setImageData({
-      name: '',
-      image_url: '',
-    });
+    setForm(defaultFormSkillMapping)
   };
-
-  const [imageUrl, setImageUrl] = useState<string>('');
 
   // put default to base limit if that outside range
   let parsedLimit = Number(limit);
@@ -89,26 +73,63 @@ const TableProjectAttachment = ({ itemsPerPage, itemsPerPageList }: { itemsPerPa
     limit = itemsPerPage;
   }
 
-  const fetchProjectAttachments = async (offset: number, size: number) => {
+  const fetchSkillsBatch = async (offset: number, size: number) => {
+    try {
+      const accessToken = await getAccessToken();
+      if (accessToken) {
+        const data: ResponseSkills = await getSkills(accessToken.value, { offset, size, is_active: true });
+        return data;
+      }
+    } catch (error) {
+      console.error("Error fetching skills:", error);
+      throw error; // Propagate the error to the caller
+    }
+  };
+
+  const fetchSkills = async (offset: number, size: number) => {
+    setLoading(true);
+    try {
+      const skillsBatch = [];
+      let currentOffset = offset;
+      while (true) {
+        const skillsData = await fetchSkillsBatch(currentOffset, size);
+        if (skillsData) {
+          skillsBatch.push(skillsData.data);
+          if (skillsData.meta.offset < size) {
+            // Break the loop if fetched skills are less than requested size
+            break;
+          }
+        } else {
+          break;
+        }
+        currentOffset += size; // Increment offset for the next batch
+      }
+      const allSkills = skillsBatch.flat(); // Flatten the array of batches
+      if (allSkills != null) {
+        setSkills(allSkills);
+      }
+    } catch (error) {
+      console.error("Error fetching skills:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchSkillMappings = async (offset: number, size: number) => {
     setLoading(true);
     try {
       const accessToken = await getAccessToken();
       if (accessToken) {
-        const projectAttachmentsData: ResponseProjectAttachments = await getProjectAttachments(accessToken.value, {
-          project_id: params.id,
+        const skillMappingsData: ResponseSkillMappings = await getSkillMappings(accessToken.value, {
           offset: offset,
           size: size,
           sort_by: sortBy,
           sort_order: sortOrder,
         });
-        setProjectAttachments(projectAttachmentsData);
+        setSkillMappings(skillMappingsData);
       }
-      setForm(defaultFormProjectAttachment => ({
-        ...defaultFormProjectAttachment,
-        project_id: params.id,
-      }));
     } catch (error) {
-      console.error("Error fetching projectAttachments:", error);
+      console.error("Error fetching skillMappings:", error);
     } finally {
       // reset
       setLoading(false);
@@ -120,7 +141,7 @@ const TableProjectAttachment = ({ itemsPerPage, itemsPerPageList }: { itemsPerPa
     try {
       const accessToken = await getAccessToken();
       if (accessToken) {
-        const resourceData: ResponseGeneralDynamicResource = await getProjectResource(accessToken.value);
+        const resourceData: ResponseGeneralDynamicResource = await getSkillResource(accessToken.value);
         setResource(resourceData);
       }
     } catch (error) {
@@ -132,65 +153,47 @@ const TableProjectAttachment = ({ itemsPerPage, itemsPerPageList }: { itemsPerPa
   };
 
   // handle edit
-  const handleEdit = async (id: string) => {
-    const accessToken = await getAccessToken();
-    if (accessToken) {
-      const data = await getProjectAttachment(accessToken.value, id);
-      if (Object.keys(data.data).length > 0) {
-        const result = data.data;
-        setForm({
-          id: result.id,
-          project_id: params.id,
-          title: result.title,
-          description: result.description ?? '',
-          is_active: result.is_active ?? false,
-          category: result.category,
-          website_url: result.website_url ?? '',
-          image: '',
-        })
-        setImageUrl(result.image_url);
-        setEditId(result.id);
-      }
-
-      handleOpenAddEdit();
-    }
+  const handleEdit = (row: SkillMapping) => {
+    setForm({
+      id: row.id,
+      skill_id: row.skill.id,
+      skill: {
+        id: '',
+        name: '',
+      },
+      is_active: row.is_active ?? false,
+    })
+    setEditId(row.id);
+    handleOpenAddEdit();
   };
 
   // handle view
   const handleView = async (id: string) => {
     const accessToken = await getAccessToken();
     if (accessToken) {
-      const data = await getProjectAttachment(accessToken.value, id);
+      const data = await getSkillMapping(accessToken.value, id);
       if (Object.keys(data.data).length > 0) {
         const result = data.data;
         setForm({
           id: result.id,
-          project_id: params.id,
-          title: result.title,
-          description: result.description ?? '',
+          skill_id: result.skill.id,
+          skill: result.skill,
           is_active: result.is_active ?? false,
-          category: result.category,
-          website_url: result.website_url ?? '',
-          image: '',
-        })
-        setImageData({
-          name: result.name,
-          image_url: result.image_url
         })
       }
       handleOpenView();
     }
   };
 
-  const handleDeleteProjectAttachment = async () => {
+  const handleDeleteSkillMapping = async () => {
     setLoading(true);
     try {
       const accessToken = await getAccessToken();
       if (accessToken) {
-        const data = await deleteProjectAttachment(accessToken.value, isModalConfirmDelete.id)
+        const data = await deleteSkillMapping(accessToken.value, isModalConfirmDelete.id)
         if (data == 'SUCCESS') {
-          toast.success('project-attachment deleted successfully');
-          fetchProjectAttachments(Number(page), Number(limit),);
+          toast.success('skillMapping deleted successfully');
+          fetchSkillMappings(Number(page), Number(limit),);
 
           const params = new URLSearchParams(searchParams);
           params.set("page", String(1));
@@ -208,17 +211,18 @@ const TableProjectAttachment = ({ itemsPerPage, itemsPerPageList }: { itemsPerPa
       })
       setLoading(false);
     } catch (error) {
-      console.error("Error deleting project-attachment:", error);
-      toast.error('project-attachment deleted failed');
+      console.error("Error deleting skillMapping:", error);
+      toast.error('skillMapping deleted failed');
     }
   }
 
   useEffect(() => {
-    fetchProjectAttachments(Number(page), Number(limit),);
+    fetchSkillMappings(Number(page), Number(limit),);
   }, [page, limit, sortBy, sortOrder]);
 
   useEffect(() => {
     fetchResource();
+    fetchSkills(1, 10);
   }, [])
 
   const handlePageChange = (event: React.MouseEvent<HTMLButtonElement> | null, page: number) => {
@@ -251,14 +255,19 @@ const TableProjectAttachment = ({ itemsPerPage, itemsPerPageList }: { itemsPerPa
     );
   }
 
-  if (!projectAttachments || projectAttachments?.data?.length === 0) {
+  if (!skillMappings || skillMappings?.data?.length === 0) {
     return <>
+      <Button
+        variant="contained"
+        href={`/${params.locale}/panel/skill`}
+      >
+        Back
+      </Button>
       {
-        resource?.data.includes('create') &&
+        resource?.data.includes('create_skill_mapping') &&
         <Button
           variant="contained"
           onClick={() => {
-            setImageUrl('');
             handleOpenAddEdit();
           }}
           disabled={loading}
@@ -266,35 +275,40 @@ const TableProjectAttachment = ({ itemsPerPage, itemsPerPageList }: { itemsPerPa
           Create
         </Button>
       }
-      <ModalAddEditProjectAttachment
+
+      <ModalAddEditSkillMapping
         openAddEdit={openAddEdit}
         handleCloseAddEdit={handleCloseAddEdit}
         editId={editId}
         modalStyle={modalStyle}
         form={form}
-        editProjectAttachment={editProjectAttachment}
-        addProjectAttachment={addProjectAttachment}
-        fetchProjectAttachments={fetchProjectAttachments}
+        editSkillMapping={editSkillMapping}
+        addSkillMapping={addSkillMapping}
+        fetchSkillMappings={fetchSkillMappings}
         page={Number(page)}
         limit={Number(limit)}
-        imageUrl={imageUrl}
-        setImageUrl={setImageUrl}
+        skills={skills}
       />
       <TableDataNotFound />
     </>;
   }
 
-  const { data, meta } = projectAttachments;
+  const { data, meta } = skillMappings;
 
   return (
     <>
       {/* create button */}
+      <Button
+        variant="contained"
+        href={`/${params.locale}/panel/skill`}
+      >
+        Back
+      </Button>
       {
-        resource?.data.includes('create') &&
+        resource?.data.includes('create_skill_mapping') &&
         <Button
           variant="contained"
           onClick={() => {
-            setImageUrl('');
             handleOpenAddEdit();
           }}
           disabled={loading}
@@ -303,49 +317,44 @@ const TableProjectAttachment = ({ itemsPerPage, itemsPerPageList }: { itemsPerPa
         </Button>
       }
 
-      <ModalAddEditProjectAttachment
+      <ModalAddEditSkillMapping
         openAddEdit={openAddEdit}
         handleCloseAddEdit={handleCloseAddEdit}
         editId={editId}
         modalStyle={modalStyle}
         form={form}
-        editProjectAttachment={editProjectAttachment}
-        addProjectAttachment={addProjectAttachment}
-        fetchProjectAttachments={fetchProjectAttachments}
+        editSkillMapping={editSkillMapping}
+        addSkillMapping={addSkillMapping}
+        fetchSkillMappings={fetchSkillMappings}
         page={Number(page)}
         limit={Number(limit)}
-        imageUrl={imageUrl}
-        setImageUrl={setImageUrl}
+        skills={skills}
       />
 
       {/* modal view */}
-      {resource?.data.includes('view') &&
-        <ModalViewProjectAttachment
+      {resource?.data.includes('view_skill_mapping') &&
+        <ModalViewSkillMapping
           openView={openView}
           handleCloseView={handleCloseView}
           modalStyle={modalStyle}
           form={form}
-          imageData={imageData}
         />
       }
-
 
       <TableContainer component={Paper}>
         <Table sx={{ minWidth: 650 }} aria-label="table">
           <TableHead>
             <TableRow>
               <TableCell align="left">ACTION</TableCell>
-              <SortableColumn columnKey="title" label="TITLE" sortBy={sortBy} sortOrder={sortOrder} router={router} searchParams={searchParams} />
-              <SortableColumn columnKey="description" label="DESCRIPTION" sortBy={sortBy} sortOrder={sortOrder} router={router} searchParams={searchParams} />
-              <SortableColumn columnKey="category" label="CATEGORY" sortBy={sortBy} sortOrder={sortOrder} router={router} searchParams={searchParams} />
+              <SortableColumn columnKey="skill_id" label="Skill" sortBy={sortBy} sortOrder={sortOrder} router={router} searchParams={searchParams} />
               <SortableColumn columnKey="is_active" label="STATUS" sortBy={sortBy} sortOrder={sortOrder} router={router} searchParams={searchParams} />
             </TableRow>
           </TableHead>
           <TableBody>
-            {data?.map((row: ProjectAttachment) => (
+            {data?.map((row: SkillMapping) => (
               <TableRow key={row.id} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                 <TableCell align="center">
-                  {resource?.data.includes('view') &&
+                  {resource?.data.includes('view_skill_mapping') &&
                     <Tooltip title="View">
                       <Button
                         color="info"
@@ -357,19 +366,19 @@ const TableProjectAttachment = ({ itemsPerPage, itemsPerPageList }: { itemsPerPa
                       </Button>
                     </Tooltip>
                   }
-                  {resource?.data.includes('edit') &&
+                  {resource?.data.includes('edit_skill_mapping') &&
                     <Tooltip title="Edit">
                       <Button
                         color="warning"
                         onClick={() => {
-                          handleEdit(row.id);
+                          handleEdit(row);
                         }}
                       >
                         <EditIcon />
                       </Button>
                     </Tooltip>
                   }
-                  {resource?.data.includes('delete') &&
+                  {resource?.data.includes('delete_skill_mapping') &&
                     <Tooltip title="Delete">
                       <Button
                         onClick={() => setIsModalConfirmDelete({
@@ -383,9 +392,7 @@ const TableProjectAttachment = ({ itemsPerPage, itemsPerPageList }: { itemsPerPa
                     </Tooltip>
                   }
                 </TableCell>
-                <TableCell align="left">{row.title}</TableCell>
-                <TableCell align="left">{row.description}</TableCell>
-                <TableCell align="left">{row.category}</TableCell>
+                <TableCell align="left">{row.skill.name}</TableCell>
                 <TableCell align="left">
                   {
                     row.is_active ?
@@ -420,11 +427,11 @@ const TableProjectAttachment = ({ itemsPerPage, itemsPerPageList }: { itemsPerPa
           id: '',
           show: false,
         })}
-        onOk={handleDeleteProjectAttachment}
+        onOk={handleDeleteSkillMapping}
         loading={loading}
       />
     </>
   );
 };
 
-export default TableProjectAttachment;
+export default TableSkillMapping;

@@ -1,26 +1,24 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { Button, TablePagination, Tooltip, Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
-import { deleteProject, getProjects, getProjectResource, getProject } from '@/data/repository/project/project-repository';
-import { ResponseProjects, Project } from '@/types/project';
-import { TableDataNotFound, TableLoading } from '../../shared/table/table';
+import { Button, TablePagination, Tooltip, Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow} from '@mui/material';
+import { deleteSkill, getSkills, getSkillResource, getSkill } from '@/data/repository/skill/skill-repository';
+import { ResponseSkills, Skill } from '@/types/skill/skill';
+import { TableDataNotFound, TableLoading } from '../../../shared/table/table';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
-import AttachFileIcon from '@mui/icons-material/AttachFile';
 import { ModalConfirmation } from '@/components/shared/modal/modal';
 import { toast } from 'sonner';
 import { ResponseGeneralDynamicResource } from '@/types/general';
 import { getAccessToken } from '@/actions/auth/auth-action';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import { SortableColumn } from '@/components/shared/table/column';
-import { defaultFormProject } from '@/schemas/project';
-import { addProject, editProject } from '@/actions/project/project-action';
-import { ModalAddEditProject, ModalViewProject } from '../modal/modal-project';
-import { getProjectTranslation } from '@/data/repository/project/project-translation-repository';
-import { addProjectTranslation, editProjectTranslation } from '@/actions/project/project-translation-action';
+import { defaultFormSkill } from '@/schemas/skill/skill';
+import { addSkill, editSkill } from '@/actions/skill/skill-action';
+import { getSkillTranslation } from '@/data/repository/skill/skill-translation-repository';
+import { addSkillTranslation, editSkillTranslation } from '@/actions/skill/skill-translation-action';
+import { ModalAddEditSkill, ModalViewSkill } from '../../modal/skill/modal-skill';
 
 const modalStyle = {
   position: 'absolute',
@@ -34,8 +32,8 @@ const modalStyle = {
   p: 4,
 };
 
-const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, itemsPerPageList: number[] }) => {
-  const [projects, setProjects] = useState<ResponseProjects | null>(null);
+const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, itemsPerPageList: number[] }) => {
+  const [skills, setSkills] = useState<ResponseSkills | null>(null);
   const [resource, setResource] = useState<ResponseGeneralDynamicResource | null>(null);
   const [isModalConfirmDelete, setIsModalConfirmDelete] = useState({
     id: '',
@@ -52,7 +50,7 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
   // add and edit
   const [editId, setEditId] = useState('');
   const [editIdTranslation, setEditIdTranslation] = useState('');
-  const [form, setForm] = useState(defaultFormProject)
+  const [form, setForm] = useState(defaultFormSkill)
 
   const [openAddEdit, setOpenAddEdit] = React.useState(false);
   const handleOpenAddEdit = () => setOpenAddEdit(true);
@@ -60,7 +58,7 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
     setOpenAddEdit(false);
     setEditId('');
     setEditIdTranslation('');
-    setForm(defaultFormProject)
+    setForm(defaultFormSkill)
   };
   // view
   const [imageData, setImageData] = useState({
@@ -71,7 +69,7 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
   const handleOpenView = () => setOpenView(true);
   const handleCloseView = () => {
     setOpenView(false);
-    setForm(defaultFormProject)
+    setForm(defaultFormSkill)
     setImageData({
       name: '',
       image_url: '',
@@ -87,21 +85,21 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
     limit = itemsPerPage;
   }
 
-  const fetchProjects = async (offset: number, size: number) => {
+  const fetchSkills = async (offset: number, size: number) => {
     setLoading(true);
     try {
       const accessToken = await getAccessToken();
       if (accessToken) {
-        const projectsData: ResponseProjects = await getProjects(accessToken.value, {
+        const skillsData: ResponseSkills = await getSkills(accessToken.value, {
           offset: offset,
           size: size,
           sort_by: sortBy,
           sort_order: sortOrder,
         });
-        setProjects(projectsData);
+        setSkills(skillsData);
       }
     } catch (error) {
-      console.error("Error fetching projects:", error);
+      console.error("Error fetching skills:", error);
     } finally {
       // reset
       setLoading(false);
@@ -113,7 +111,7 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
     try {
       const accessToken = await getAccessToken();
       if (accessToken) {
-        const resourceData: ResponseGeneralDynamicResource = await getProjectResource(accessToken.value);
+        const resourceData: ResponseGeneralDynamicResource = await getSkillResource(accessToken.value);
         setResource(resourceData);
       }
     } catch (error) {
@@ -128,31 +126,33 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
   const handleEdit = async (id: string) => {
     const accessToken = await getAccessToken();
     if (accessToken) {
-      const data = await getProject(accessToken.value, id);
+      const data = await getSkill(accessToken.value, id);
       if (Object.keys(data.data).length > 0) {
         const result = data.data;
         setForm({
           id: result.id,
-          title: result.title,
-          slug: result.slug,
-          title_2nd: '',
+          name: result.name,
+          code: result.code,
+          category: result.category ?? '',
           is_active: result.is_active ?? false,
           image: '',
           logo: '',
+          website_url: result.website_url ?? '',
           description: '',
+          name_2nd: '',
         })
-        setEditId(result.id);
         setImageUrl(result.image_url);
         setLogoUrl(result.logo_url);
+        setEditId(result.id);
       }
 
-      const dataTranslation = await getProjectTranslation(accessToken.value, id, params.locale);
+      const dataTranslation = await getSkillTranslation(accessToken.value, id, params.locale);
       if (Object.keys(dataTranslation.data).length > 0) {
         const result = dataTranslation.data;
         setForm(prevForm => ({
           ...prevForm,
           description: result.description ?? '',
-          title_2nd: result.title ?? '',
+          name_2nd: result.name ?? '',
         }));
         setEditIdTranslation(result.id);
       } else {
@@ -160,54 +160,55 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
       }
       handleOpenAddEdit();
     }
-    handleOpenAddEdit();
   };
 
   // handle view
   const handleView = async (id: string) => {
     const accessToken = await getAccessToken();
     if (accessToken) {
-      const data = await getProject(accessToken.value, id);
+      const data = await getSkill(accessToken.value, id);
       if (Object.keys(data.data).length > 0) {
         const result = data.data;
         setForm({
           id: result.id,
-          title: result.title,
-          title_2nd: '',
-          slug: result.slug,
+          name: result.name,
+          code: result.code,
+          category: result.category ?? '',
           is_active: result.is_active ?? false,
           image: '',
           logo: '',
+          website_url: result.website_url ?? '',
           description: '',
+          name_2nd: '',
         })
         setImageData({
           name: result.name,
           image_url: result.logo_url
         })
-      }
-      const dataTranslation = await getProjectTranslation(accessToken.value, id, params.locale);
-      if (Object.keys(dataTranslation.data).length > 0) {
-        const result = dataTranslation.data;
-        setForm(prevForm => ({
-          ...prevForm,
-          description: result.description ?? '',
-          title_2nd: result.title ?? '',
-        }));
-        setEditIdTranslation(result.id);
+
+        const dataTranslation = await getSkillTranslation(accessToken.value, id, params.locale);
+        if (Object.keys(dataTranslation.data).length > 0) {
+          const result = dataTranslation.data;
+          setForm(prevForm => ({
+            ...prevForm,
+            description: result.description ?? '',
+            name_2nd: result.name ?? '',
+          }));
+        }
       }
       handleOpenView();
     }
   };
 
-  const handleDeleteProject = async () => {
+  const handleDeleteSkill = async () => {
     setLoading(true);
     try {
       const accessToken = await getAccessToken();
       if (accessToken) {
-        const data = await deleteProject(accessToken.value, isModalConfirmDelete.id)
+        const data = await deleteSkill(accessToken.value, isModalConfirmDelete.id)
         if (data == 'SUCCESS') {
-          toast.success('project deleted successfully');
-          fetchProjects(Number(page), Number(limit),);
+          toast.success('skill deleted successfully');
+          fetchSkills(Number(page), Number(limit),);
 
           const params = new URLSearchParams(searchParams);
           params.set("page", String(1));
@@ -225,13 +226,13 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
       })
       setLoading(false);
     } catch (error) {
-      console.error("Error deleting project:", error);
-      toast.error('project deleted failed');
+      console.error("Error deleting skill:", error);
+      toast.error('skill deleted failed');
     }
   }
 
   useEffect(() => {
-    fetchProjects(Number(page), Number(limit),);
+    fetchSkills(Number(page), Number(limit),);
   }, [page, limit, sortBy, sortOrder]);
 
   useEffect(() => {
@@ -268,10 +269,10 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
     );
   }
 
-  if (!projects || projects?.data?.length === 0) {
+  if (!skills || skills?.data?.length === 0) {
     return <>
       {
-        resource?.data.includes('create') &&
+        resource?.data.includes('create_skill_other') &&
         <Button
           variant="contained"
           onClick={() => {
@@ -284,7 +285,13 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
           Create
         </Button>
       }
-      <ModalAddEditProject
+      <Button
+        variant="contained"
+        href={`/${params.locale}/panel/skill/mapping`}
+      >
+        Mapping
+      </Button>
+      <ModalAddEditSkill
         openAddEdit={openAddEdit}
         handleCloseAddEdit={handleCloseAddEdit}
         editId={editId}
@@ -292,11 +299,11 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
         params={params}
         modalStyle={modalStyle}
         form={form}
-        editProject={editProject}
-        editProjectTranslation={editProjectTranslation}
-        addProject={addProject}
-        addProjectTranslation={addProjectTranslation}
-        fetchProjects={fetchProjects}
+        editSkill={editSkill}
+        editSkillTranslation={editSkillTranslation}
+        addSkill={addSkill}
+        addSkillTranslation={addSkillTranslation}
+        fetchSkills={fetchSkills}
         page={Number(page)}
         limit={Number(limit)}
         imageUrl={imageUrl}
@@ -308,13 +315,13 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
     </>;
   }
 
-  const { data, meta } = projects;
+  const { data, meta } = skills;
 
   return (
     <>
       {/* create button */}
       {
-        resource?.data.includes('create') &&
+        resource?.data.includes('create_skill_other') &&
         <Button
           variant="contained"
           onClick={() => {
@@ -327,8 +334,14 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
           Create
         </Button>
       }
+      <Button
+        variant="contained"
+        href={`/${params.locale}/panel/skill/mapping`}
+      >
+        Mapping
+      </Button>
 
-      <ModalAddEditProject
+      <ModalAddEditSkill
         openAddEdit={openAddEdit}
         handleCloseAddEdit={handleCloseAddEdit}
         editId={editId}
@@ -336,11 +349,11 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
         params={params}
         modalStyle={modalStyle}
         form={form}
-        editProject={editProject}
-        editProjectTranslation={editProjectTranslation}
-        addProject={addProject}
-        addProjectTranslation={addProjectTranslation}
-        fetchProjects={fetchProjects}
+        editSkill={editSkill}
+        editSkillTranslation={editSkillTranslation}
+        addSkill={addSkill}
+        addSkillTranslation={addSkillTranslation}
+        fetchSkills={fetchSkills}
         page={Number(page)}
         limit={Number(limit)}
         imageUrl={imageUrl}
@@ -350,8 +363,8 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
       />
 
       {/* modal view */}
-      {resource?.data.includes('view') &&
-        <ModalViewProject
+      {resource?.data.includes('view_skill_other') &&
+        <ModalViewSkill
           openView={openView}
           handleCloseView={handleCloseView}
           modalStyle={modalStyle}
@@ -360,21 +373,22 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
         />
       }
 
-
       <TableContainer component={Paper}>
         <Table sx={{ minWidth: 650 }} aria-label="table">
           <TableHead>
             <TableRow>
               <TableCell align="left">ACTION</TableCell>
-              <SortableColumn columnKey="title" label="Title" sortBy={sortBy} sortOrder={sortOrder} router={router} searchParams={searchParams} />
+              <SortableColumn columnKey="code" label="CODE" sortBy={sortBy} sortOrder={sortOrder} router={router} searchParams={searchParams} />
+              <SortableColumn columnKey="name" label="NAME" sortBy={sortBy} sortOrder={sortOrder} router={router} searchParams={searchParams} />
+              <SortableColumn columnKey="category" label="CATEGORY" sortBy={sortBy} sortOrder={sortOrder} router={router} searchParams={searchParams} />
               <SortableColumn columnKey="is_active" label="STATUS" sortBy={sortBy} sortOrder={sortOrder} router={router} searchParams={searchParams} />
             </TableRow>
           </TableHead>
           <TableBody>
-            {data?.map((row: Project) => (
+            {data?.map((row: Skill) => (
               <TableRow key={row.id} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                 <TableCell align="center">
-                  {resource?.data.includes('view') &&
+                  {resource?.data.includes('view_skill_other') &&
                     <Tooltip title="View">
                       <Button
                         color="info"
@@ -386,7 +400,7 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
                       </Button>
                     </Tooltip>
                   }
-                  {resource?.data.includes('edit') &&
+                  {resource?.data.includes('edit_skill_other') &&
                     <Tooltip title="Edit">
                       <Button
                         color="warning"
@@ -398,27 +412,7 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
                       </Button>
                     </Tooltip>
                   }
-                   {resource?.data.includes('edit') &&
-                    <Tooltip title="Manage Skill">
-                      <Button
-                        color="warning"
-                        href={`/${params.locale}/panel/project/skill/${row.id}`}
-                      >
-                        <WorkspacePremiumIcon />
-                      </Button>
-                    </Tooltip>
-                  }
-                   {resource?.data.includes('edit') &&
-                    <Tooltip title="Manage Attachment">
-                      <Button
-                        color="warning"
-                        href={`/${params.locale}/panel/project/attachment/${row.id}`}
-                      >
-                        <AttachFileIcon />
-                      </Button>
-                    </Tooltip>
-                  }
-                  {resource?.data.includes('delete') &&
+                  {resource?.data.includes('delete_skill_other') &&
                     <Tooltip title="Delete">
                       <Button
                         onClick={() => setIsModalConfirmDelete({
@@ -432,7 +426,9 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
                     </Tooltip>
                   }
                 </TableCell>
-                <TableCell align="left">{row.title}</TableCell>
+                <TableCell align="left">{row.code}</TableCell>
+                <TableCell align="left">{row.name}</TableCell>
+                <TableCell align="left">{row.category}</TableCell>
                 <TableCell align="left">
                   {
                     row.is_active ?
@@ -455,8 +451,6 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
         onRowsPerPageChange={handleChangeItemPerPageSelect}
       />
 
-
-
       {/* modal confirmation delete */}
       <ModalConfirmation
         title={'Delete Confirmation'}
@@ -467,11 +461,11 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
           id: '',
           show: false,
         })}
-        onOk={handleDeleteProject}
+        onOk={handleDeleteSkill}
         loading={loading}
       />
     </>
   );
 };
 
-export default TableProject;
+export default TableSkill;
