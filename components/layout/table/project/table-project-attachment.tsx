@@ -24,7 +24,17 @@ const modalStyle = {
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  width: 400,
+  width: '90%', // default width for smaller screens
+  maxWidth: 400, // maximum width for larger screens
+  '@media (min-width:600px)': {
+    width: '80%',
+  },
+  '@media (min-width:960px)': {
+    width: '60%',
+  },
+  '@media (min-width:1280px)': {
+    width: '50%',
+  },
   bgcolor: 'background.paper',
   borderRadius: 2,
   boxShadow: 24,
