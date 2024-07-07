@@ -477,7 +477,7 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
           id: '',
           show: false,
         })}
-        onOk={handleDeleteProject}
+        onYes={handleDeleteProject}
         loading={loading}
       />
     </>

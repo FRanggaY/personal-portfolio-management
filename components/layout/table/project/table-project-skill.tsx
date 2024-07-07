@@ -377,7 +377,7 @@ const TableProjectSkill = ({ itemsPerPage }: { itemsPerPage: number }) => {
           skill_id: '',
           show: false,
         })}
-        onOk={handleDeleteProjectSkill}
+        onYes={handleDeleteProjectSkill}
         loading={loading}
       />
     </>

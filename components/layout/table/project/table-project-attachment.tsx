@@ -430,7 +430,7 @@ const TableProjectAttachment = ({ itemsPerPage, itemsPerPageList }: { itemsPerPa
           id: '',
           show: false,
         })}
-        onOk={handleDeleteProjectAttachment}
+        onYes={handleDeleteProjectAttachment}
         loading={loading}
       />
     </>

@@ -495,7 +495,7 @@ const TableExperience = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: num
           id: '',
           show: false,
         })}
-        onOk={handleDeleteExperience}
+        onYes={handleDeleteExperience}
         loading={loading}
       />
     </>

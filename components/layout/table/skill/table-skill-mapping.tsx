@@ -437,7 +437,7 @@ const TableSkillMapping = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: n
           id: '',
           show: false,
         })}
-        onOk={handleDeleteSkillMapping}
+        onYes={handleDeleteSkillMapping}
         loading={loading}
       />
     </>

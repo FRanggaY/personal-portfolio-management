@@ -490,7 +490,7 @@ const TableEducation = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: numb
           id: '',
           show: false,
         })}
-        onOk={handleDeleteEducation}
+        onYes={handleDeleteEducation}
         loading={loading}
       />
     </>

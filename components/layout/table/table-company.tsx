@@ -462,7 +462,7 @@ const TableCompany = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
           id: '',
           show: false,
         })}
-        onOk={handleDeleteCompany}
+        onYes={handleDeleteCompany}
         loading={loading}
       />
     </>

@@ -460,7 +460,7 @@ const TableSchool = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number,
           id: '',
           show: false,
         })}
-        onOk={handleDeleteSchool}
+        onYes={handleDeleteSchool}
         loading={loading}
       />
     </>

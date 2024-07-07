@@ -471,7 +471,7 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
           id: '',
           show: false,
         })}
-        onOk={handleDeleteSkill}
+        onYes={handleDeleteSkill}
         loading={loading}
       />
     </>

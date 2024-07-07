@@ -8,7 +8,7 @@ export const ModalConfirmation = (
     confirmationText,
     open,
     onCancel,
-    onOk,
+    onYes,
     loading
   }: { 
     title: string, 
@@ -16,7 +16,7 @@ export const ModalConfirmation = (
     confirmationText: string,
     open: boolean,
     onCancel: () => void,
-    onOk: () => void,
+    onYes: () => void,
     loading: boolean
   }) => {
   return (
@@ -43,7 +43,7 @@ export const ModalConfirmation = (
         <Button
           variant="contained"
           color="success"
-          onClick={onOk}
+          onClick={onYes}
           disabled={loading}
         >
           {loading ? "Loading..." : confirmationText}

@@ -452,7 +452,7 @@ const TableSolution = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: numbe
           id: '',
           show: false,
         })}
-        onOk={handleDeleteSolution}
+        onYes={handleDeleteSolution}
         loading={loading}
       />
     </>
