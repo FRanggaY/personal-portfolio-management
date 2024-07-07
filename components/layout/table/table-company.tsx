@@ -207,8 +207,8 @@ const TableCompany = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
             address: result.address ?? '',
           }));
         }
+        handleOpenView();
       }
-      handleOpenView();
     }
   };
 

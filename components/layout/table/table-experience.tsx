@@ -233,20 +233,21 @@ const TableExperience = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: num
           location_type: '',
           description: '',
         })
+        
+        const dataTranslation = await getExperienceTranslation(accessToken.value, id, params.locale);
+        if (Object.keys(dataTranslation.data).length > 0) {
+          const result = dataTranslation.data;
+          setForm(prevForm => ({
+            ...prevForm,
+            description: result.description ?? '',
+            title_2nd: result.title ?? '',
+            employee_type: result.employee_type ?? '',
+            location: result.location ?? '',
+            location_type: result.location_type ?? '',
+          }));
+        }
+        handleOpenView();
       }
-      const dataTranslation = await getExperienceTranslation(accessToken.value, id, params.locale);
-      if (Object.keys(dataTranslation.data).length > 0) {
-        const result = dataTranslation.data;
-        setForm(prevForm => ({
-          ...prevForm,
-          description: result.description ?? '',
-          title_2nd: result.title ?? '',
-          employee_type: result.employee_type ?? '',
-          location: result.location ?? '',
-          location_type: result.location_type ?? '',
-        }));
-      }
-      handleOpenView();
     }
   };
 

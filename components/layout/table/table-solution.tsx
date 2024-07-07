@@ -189,18 +189,19 @@ const TableSolution = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: numbe
           name: result.name,
           image_url: result.logo_url
         })
+        
+        const dataTranslation = await getSolutionTranslation(accessToken.value, id, params.locale);
+        if (Object.keys(dataTranslation.data).length > 0) {
+          const result = dataTranslation.data;
+          setForm(prevForm => ({
+            ...prevForm,
+            description: result.description ?? '',
+            title_2nd: result.title ?? '',
+          }))
+        }
+        handleOpenView();
       }
 
-      const dataTranslation = await getSolutionTranslation(accessToken.value, id, params.locale);
-      if (Object.keys(dataTranslation.data).length > 0) {
-        const result = dataTranslation.data;
-        setForm(prevForm => ({
-          ...prevForm,
-          description: result.description ?? '',
-          title_2nd: result.title ?? '',
-        }))
-      }
-      handleOpenView();
     }
   };
 

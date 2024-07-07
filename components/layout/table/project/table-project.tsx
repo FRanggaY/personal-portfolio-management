@@ -194,18 +194,19 @@ const TableProject = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number
           name: result.name,
           image_url: result.logo_url
         })
+        
+        const dataTranslation = await getProjectTranslation(accessToken.value, id, params.locale);
+        if (Object.keys(dataTranslation.data).length > 0) {
+          const result = dataTranslation.data;
+          setForm(prevForm => ({
+            ...prevForm,
+            description: result.description ?? '',
+            title_2nd: result.title ?? '',
+          }));
+          setEditIdTranslation(result.id);
+        }
+        handleOpenView();
       }
-      const dataTranslation = await getProjectTranslation(accessToken.value, id, params.locale);
-      if (Object.keys(dataTranslation.data).length > 0) {
-        const result = dataTranslation.data;
-        setForm(prevForm => ({
-          ...prevForm,
-          description: result.description ?? '',
-          title_2nd: result.title ?? '',
-        }));
-        setEditIdTranslation(result.id);
-      }
-      handleOpenView();
     }
   };
 

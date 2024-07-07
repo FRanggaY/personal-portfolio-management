@@ -205,8 +205,8 @@ const TableSkill = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: number, 
             name_2nd: result.name ?? '',
           }));
         }
+        handleOpenView();
       }
-      handleOpenView();
     }
   };
 

@@ -190,8 +190,8 @@ const TableSkillMapping = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: n
           skill: result.skill,
           is_active: result.is_active ?? false,
         })
+        handleOpenView();
       }
-      handleOpenView();
     }
   };
 

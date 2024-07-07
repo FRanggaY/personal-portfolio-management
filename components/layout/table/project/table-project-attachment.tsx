@@ -187,8 +187,8 @@ const TableProjectAttachment = ({ itemsPerPage, itemsPerPageList }: { itemsPerPa
           name: result.name,
           image_url: result.image_url
         })
+        handleOpenView();
       }
-      handleOpenView();
     }
   };
 

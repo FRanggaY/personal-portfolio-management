@@ -230,19 +230,20 @@ const TableEducation = ({ itemsPerPage, itemsPerPageList }: { itemsPerPage: numb
           degree: '',
           description: '',
         })
+        
+        const dataTranslation = await getEducationTranslation(accessToken.value, id, params.locale);
+        if (Object.keys(dataTranslation.data).length > 0) {
+          const result = dataTranslation.data;
+          setForm(prevForm => ({
+            ...prevForm,
+            description: result.description ?? '',
+            title_2nd: result.title ?? '',
+            degree: result.degree ?? '',
+            field_of_study: result.degree ?? '',
+          }));
+        }
+        handleOpenView();
       }
-      const dataTranslation = await getEducationTranslation(accessToken.value, id, params.locale);
-      if (Object.keys(dataTranslation.data).length > 0) {
-        const result = dataTranslation.data;
-        setForm(prevForm => ({
-          ...prevForm,
-          description: result.description ?? '',
-          title_2nd: result.title ?? '',
-          degree: result.degree ?? '',
-          field_of_study: result.degree ?? '',
-        }));
-      }
-      handleOpenView();
     }
   };
 
