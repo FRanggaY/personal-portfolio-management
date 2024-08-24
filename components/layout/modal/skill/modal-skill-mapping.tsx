@@ -1,5 +1,5 @@
 import { CreateSkillMappingSchema, EditSkillMappingSchema, defaultFormSkillMapping } from "@/schemas/skill/skill-mapping";
-import { Modal, Box, Typography, Grid, FormGroup, FormControlLabel, Button, LinearProgress, Switch, Card, CardContent, Chip, InputLabel, FormHelperText, MenuItem, Select, FormControl } from "@mui/material";
+import { Modal, Box, Typography, Grid, FormGroup, FormControlLabel, Button, Switch, Card, CardContent, Chip, InputLabel, FormHelperText, MenuItem, Select, FormControl, CircularProgress } from "@mui/material";
 import { Formik, Form } from 'formik';
 import { toast } from "sonner";
 import { Skill } from "@/types/skill/skill";
@@ -47,7 +47,7 @@ export const ModalAddEditSkillMapping: React.FC<ModalAddEditProps> = ({
             initialValues={form}
             validationSchema={editId ? EditSkillMappingSchema : CreateSkillMappingSchema}
             onSubmit={async (values, { setSubmitting }) => {
-              setSubmitting(false);
+              setSubmitting(true);
 
               const formData = new FormData();
               formData.append('skill_id', `${values.skill_id}`);
@@ -73,6 +73,7 @@ export const ModalAddEditSkillMapping: React.FC<ModalAddEditProps> = ({
                 }
               }
 
+              setSubmitting(false);
             }}
           >
             {({ submitForm, isSubmitting, setFieldValue, values, errors, touched }) => (
@@ -115,7 +116,6 @@ export const ModalAddEditSkillMapping: React.FC<ModalAddEditProps> = ({
                     </FormGroup>
                   </Grid>}
                 </Grid>
-                {isSubmitting && <LinearProgress />}
                 <br />
                 <Button
                   variant="contained"
@@ -124,7 +124,7 @@ export const ModalAddEditSkillMapping: React.FC<ModalAddEditProps> = ({
                   disabled={isSubmitting}
                   onClick={submitForm}
                 >
-                  Submit
+                  {isSubmitting ? <CircularProgress /> : 'Submit'}
                 </Button>
               </Form>
             )}

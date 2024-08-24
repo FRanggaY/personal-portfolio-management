@@ -1,5 +1,5 @@
 import { CreateProjectAttachmentSchema, EditProjectAttachmentSchema, defaultFormProjectAttachment } from "@/schemas/project/project-attachment";
-import { Modal, Box, Typography, Grid, FormGroup, FormControlLabel, ButtonGroup, Button, LinearProgress, Switch, Card, CardContent, Chip } from "@mui/material";
+import { Modal, Box, Typography, Grid, FormGroup, FormControlLabel, ButtonGroup, Button, Switch, Card, CardContent, Chip, CircularProgress } from "@mui/material";
 import { Formik, Form, Field } from 'formik';
 import { TextField } from 'formik-mui';
 import { toast } from "sonner";
@@ -53,7 +53,7 @@ export const ModalAddEditProjectAttachment: React.FC<ModalAddEditProps> = ({
             initialValues={form}
             validationSchema={editId ? EditProjectAttachmentSchema : CreateProjectAttachmentSchema}
             onSubmit={async (values, { setSubmitting }) => {
-              setSubmitting(false);
+              setSubmitting(true);
 
               const formData = new FormData();
               formData.append('project_id', `${values.project_id}`);
@@ -86,6 +86,7 @@ export const ModalAddEditProjectAttachment: React.FC<ModalAddEditProps> = ({
                 }
               }
 
+              setSubmitting(false);
             }}
           >
             {({ submitForm, isSubmitting, setFieldValue, values }) => (
@@ -174,7 +175,6 @@ export const ModalAddEditProjectAttachment: React.FC<ModalAddEditProps> = ({
                   </Grid>
 
                 </Grid>
-                {isSubmitting && <LinearProgress />}
                 <br />
                 <Button
                   variant="contained"
@@ -183,7 +183,7 @@ export const ModalAddEditProjectAttachment: React.FC<ModalAddEditProps> = ({
                   disabled={isSubmitting}
                   onClick={submitForm}
                 >
-                  Submit
+                  {isSubmitting ? <CircularProgress /> : 'Submit'}
                 </Button>
               </Form>
             )}

@@ -1,5 +1,5 @@
 import { CreateProjectSchema, EditProjectSchema, defaultFormProject } from "@/schemas/project/project";
-import { Modal, Box, Typography, Grid, FormGroup, FormControlLabel, ButtonGroup, Button, LinearProgress, Switch, Card, CardContent, Chip } from "@mui/material";
+import { Modal, Box, Typography, Grid, FormGroup, FormControlLabel, ButtonGroup, Button, Switch, Card, CardContent, Chip, CircularProgress } from "@mui/material";
 import { Formik, Form, Field } from 'formik';
 import { TextField } from 'formik-mui';
 import { toast } from "sonner";
@@ -65,8 +65,8 @@ export const ModalAddEditProject: React.FC<ModalAddEditProps> = ({
             initialValues={form}
             validationSchema={editId ? EditProjectSchema : CreateProjectSchema}
             onSubmit={async (values, { setSubmitting }) => {
-              setSubmitting(false);
-
+              setSubmitting(true);
+              
               const formData = new FormData();
               formData.append('title', `${values.title}`);
               formData.append('slug', `${values.slug}`);
@@ -75,15 +75,15 @@ export const ModalAddEditProject: React.FC<ModalAddEditProps> = ({
 
               if (editId) { // update project
                 formData.append('is_active', `${values.is_active}`);
-
+                
                 const message = await editProject(editId, formData);
                 if (message === 'SUCCESS') {
-
+                  
                   // project translation
                   const formDataTranslation = new FormData();
                   formDataTranslation.append('title', `${values.title_2nd}`);
                   formDataTranslation.append('description', `${values.description}`);
-
+                  
                   let message;
                   if (editIdTranslation) {
                     message = await editProjectTranslation(editId, params.locale, formDataTranslation)
@@ -92,7 +92,7 @@ export const ModalAddEditProject: React.FC<ModalAddEditProps> = ({
                     formDataTranslation.append('language_id', params.locale);
                     message = await addProjectTranslation(formDataTranslation)
                   }
-
+                  
                   if (message === 'SUCCESS') {
                     fetchProjects(Number(page), Number(limit),);
                     toast.success('project updated successfully');
@@ -103,7 +103,7 @@ export const ModalAddEditProject: React.FC<ModalAddEditProps> = ({
                 } else {
                   toast.error(message);
                 }
-
+                
               } else { // create new project
                 const message = await addProject(formData);
                 if (message === 'SUCCESS') {
@@ -114,9 +114,10 @@ export const ModalAddEditProject: React.FC<ModalAddEditProps> = ({
                   toast.error(message)
                 }
               }
-
+              
+              setSubmitting(false);
             }}
-          >
+            >
             {({ submitForm, isSubmitting, setFieldValue, values }) => (
               <Form>
                 <Grid container spacing={2}>
@@ -232,7 +233,6 @@ export const ModalAddEditProject: React.FC<ModalAddEditProps> = ({
                   </Grid>
 
                 </Grid>
-                {isSubmitting && <LinearProgress />}
                 <br />
                 <Button
                   variant="contained"
@@ -241,7 +241,7 @@ export const ModalAddEditProject: React.FC<ModalAddEditProps> = ({
                   disabled={isSubmitting}
                   onClick={submitForm}
                 >
-                  Submit
+                  {isSubmitting ? <CircularProgress /> : 'Submit'}
                 </Button>
               </Form>
             )}

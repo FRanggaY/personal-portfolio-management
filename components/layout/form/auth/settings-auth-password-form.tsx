@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Grid, LinearProgress, InputLabel, FormControl, OutlinedInput, InputAdornment, IconButton, FormHelperText } from "@mui/material";
+import { Button, Grid, InputLabel, FormControl, OutlinedInput, InputAdornment, IconButton, FormHelperText, CircularProgress } from "@mui/material";
 import { Formik, Form } from 'formik';
 import { toast } from 'sonner';
 import { useState } from "react";
@@ -37,13 +37,14 @@ const SettingsAuthPasswordForm = () => {
       }}
       validationSchema={AuthProfilePasswordSchema}
       onSubmit={async (values, { setSubmitting }) => {
-        setSubmitting(false);
+        setSubmitting(true);
         const message = await updateProfilePassword(values);
         if (message === 'SUCCESS') {
           toast.success('profile password updated successfully');
         } else {
           toast.error(message)
         }
+        setSubmitting(false);
       }}
     >
       {({ submitForm, isSubmitting, setFieldValue, values, touched, errors }) => (
@@ -137,7 +138,6 @@ const SettingsAuthPasswordForm = () => {
               </FormControl>
             </Grid>
           </Grid>
-          {isSubmitting && <LinearProgress />}
           <br />
           <Button
             variant="contained"
@@ -146,7 +146,7 @@ const SettingsAuthPasswordForm = () => {
             disabled={isSubmitting}
             onClick={submitForm}
           >
-            Update Password
+            {isSubmitting ? <CircularProgress /> : 'Update Password'}
           </Button>
         </Form>
       )}

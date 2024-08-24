@@ -2,7 +2,7 @@
 
 import { useAuthProfile } from "@/context/AuthProfileContext";
 import { AuthProfile } from "@/types/auth";
-import { Button, Grid, LinearProgress, MenuItem, Select, InputLabel, FormControl, Skeleton } from "@mui/material";
+import { Button, Grid, MenuItem, Select, InputLabel, FormControl, Skeleton, CircularProgress } from "@mui/material";
 import { Formik, Form } from 'formik';
 import { useState } from "react";
 import { toast } from 'sonner';
@@ -67,7 +67,6 @@ const EditThemeForm = () => {
             </Grid>
 
           </Grid>
-          {isSubmitting && <LinearProgress />}
           <br />
           <Button
             variant="contained"
@@ -76,7 +75,7 @@ const EditThemeForm = () => {
             disabled={isSubmitting}
             onClick={submitForm}
           >
-            Submit
+            {isSubmitting ? <CircularProgress /> : 'Submit'}
           </Button>
         </Form>
       )}

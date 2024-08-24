@@ -1,5 +1,5 @@
 import { CreateSolutionSchema, EditSolutionSchema, defaultFormSolution } from "@/schemas/solution";
-import { Modal, Box, Typography, Grid, FormGroup, FormControlLabel, ButtonGroup, Button, LinearProgress, Switch, Card, CardContent, Chip } from "@mui/material";
+import { Modal, Box, Typography, Grid, FormGroup, FormControlLabel, ButtonGroup, Button, Switch, Card, CardContent, Chip, CircularProgress } from "@mui/material";
 import { Formik, Form, Field } from 'formik';
 import { TextField } from 'formik-mui';
 import { toast } from "sonner";
@@ -65,7 +65,7 @@ export const ModalAddEditSolution: React.FC<ModalAddEditProps> = ({
             initialValues={form}
             validationSchema={editId ? EditSolutionSchema : CreateSolutionSchema}
             onSubmit={async (values, { setSubmitting }) => {
-              setSubmitting(false);
+              setSubmitting(true);
 
               const formData = new FormData();
               formData.append('title', `${values.title}`);
@@ -114,6 +114,7 @@ export const ModalAddEditSolution: React.FC<ModalAddEditProps> = ({
                 }
               }
 
+              setSubmitting(false);
             }}
           >
             {({ submitForm, isSubmitting, setFieldValue, values }) => (
@@ -221,7 +222,6 @@ export const ModalAddEditSolution: React.FC<ModalAddEditProps> = ({
                   </Grid>
 
                 </Grid>
-                {isSubmitting && <LinearProgress />}
                 <br />
                 <Button
                   variant="contained"
@@ -230,7 +230,7 @@ export const ModalAddEditSolution: React.FC<ModalAddEditProps> = ({
                   disabled={isSubmitting}
                   onClick={submitForm}
                 >
-                  Submit
+                  {isSubmitting ? <CircularProgress /> : 'Submit'}
                 </Button>
               </Form>
             )}

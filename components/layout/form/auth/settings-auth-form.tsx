@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Grid, LinearProgress, ButtonGroup, Skeleton, Typography, MenuItem, Select, InputLabel, FormControl, FormHelperText, Avatar } from "@mui/material";
+import { Button, Grid, ButtonGroup, Skeleton, Typography, MenuItem, Select, InputLabel, FormControl, FormHelperText, Avatar, CircularProgress } from "@mui/material";
 import { Formik, Form, Field } from 'formik';
 import { TextField } from 'formik-mui';
 import { toast } from 'sonner';
@@ -13,7 +13,7 @@ import { updateProfile } from "@/actions/auth/auth-action";
 import { AuthProfileSchema } from "@/schemas/auth";
 
 const SettingsAuthForm = () => {
-  const data:AuthProfile = useAuthProfile();
+  const data: AuthProfile = useAuthProfile();
   const [imageUrl, setImageUrl] = useState<string>(data?.profile?.image_url);
 
   function readyProfile() {
@@ -45,7 +45,7 @@ const SettingsAuthForm = () => {
       }}
       validationSchema={AuthProfileSchema}
       onSubmit={async (values, { setSubmitting }) => {
-        setSubmitting(false);
+        setSubmitting(true);
 
         const formData = new FormData();
         formData.append('username', `${values.username}`);
@@ -62,6 +62,7 @@ const SettingsAuthForm = () => {
         } else {
           toast.error(message)
         }
+        setSubmitting(false);
       }}
     >
       {({ submitForm, isSubmitting, setFieldValue, values, touched, errors }) => (
@@ -153,7 +154,6 @@ const SettingsAuthForm = () => {
               </ButtonGroup>
             </Grid>
           </Grid>
-          {isSubmitting && <LinearProgress />}
           <br />
           <Button
             variant="contained"
@@ -162,7 +162,7 @@ const SettingsAuthForm = () => {
             disabled={isSubmitting}
             onClick={submitForm}
           >
-            Update Profile
+            {isSubmitting ? <CircularProgress /> : 'Update Profile'}
           </Button>
         </Form>
       )}

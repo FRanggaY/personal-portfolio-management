@@ -1,5 +1,5 @@
 import { CreateSkillSchema, EditSkillSchema, defaultFormSkill } from "@/schemas/skill/skill";
-import { Modal, Box, Typography, Grid, FormGroup, FormControlLabel, ButtonGroup, Button, LinearProgress, Switch, Card, CardContent, Chip } from "@mui/material";
+import { Modal, Box, Typography, Grid, FormGroup, FormControlLabel, ButtonGroup, Button, Switch, Card, CardContent, Chip, CircularProgress } from "@mui/material";
 import { Formik, Form, Field } from 'formik';
 import { TextField } from 'formik-mui';
 import { toast } from "sonner";
@@ -65,7 +65,7 @@ export const ModalAddEditSkill: React.FC<ModalAddEditProps> = ({
             initialValues={form}
             validationSchema={editId ? EditSkillSchema : CreateSkillSchema}
             onSubmit={async (values, { setSubmitting }) => {
-              setSubmitting(false);
+              setSubmitting(true);
 
               const formData = new FormData();
               formData.append('code', `${values.code}`);
@@ -117,6 +117,7 @@ export const ModalAddEditSkill: React.FC<ModalAddEditProps> = ({
                 }
               }
 
+              setSubmitting(false);
             }}
           >
             {({ submitForm, isSubmitting, setFieldValue, values }) => (
@@ -252,7 +253,6 @@ export const ModalAddEditSkill: React.FC<ModalAddEditProps> = ({
                   </Grid>
 
                 </Grid>
-                {isSubmitting && <LinearProgress />}
                 <br />
                 <Button
                   variant="contained"
@@ -261,7 +261,7 @@ export const ModalAddEditSkill: React.FC<ModalAddEditProps> = ({
                   disabled={isSubmitting}
                   onClick={submitForm}
                 >
-                  Submit
+                  {isSubmitting ? <CircularProgress /> : 'Submit'}
                 </Button>
               </Form>
             )}

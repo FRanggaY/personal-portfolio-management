@@ -1,5 +1,5 @@
 import { CreateExperienceSchema, EditExperienceSchema, defaultFormExperience } from "@/schemas/experience";
-import { Modal, Box, Typography, Grid, FormGroup, FormControlLabel, Button, LinearProgress, Switch, Card, CardContent, Chip, FormControl, InputLabel, Select, MenuItem, FormHelperText } from "@mui/material";
+import { Modal, Box, Typography, Grid, FormGroup, FormControlLabel, Button, Switch, Card, CardContent, Chip, FormControl, InputLabel, Select, MenuItem, FormHelperText, CircularProgress } from "@mui/material";
 import { Formik, Form, Field } from 'formik';
 import { TextField } from 'formik-mui';
 import { toast } from "sonner";
@@ -56,7 +56,7 @@ export const ModalAddEditExperience: React.FC<ModalAddEditProps> = ({
             initialValues={form}
             validationSchema={editId ? EditExperienceSchema : CreateExperienceSchema}
             onSubmit={async (values, { setSubmitting }) => {
-              setSubmitting(false);
+              setSubmitting(true);
 
               const formData = new FormData();
               formData.append('company_id', `${values.company_id}`);
@@ -109,6 +109,7 @@ export const ModalAddEditExperience: React.FC<ModalAddEditProps> = ({
                 }
               }
 
+              setSubmitting(false);
             }}
           >
             {({ submitForm, isSubmitting, setFieldValue, values, touched, errors }) => (
@@ -231,7 +232,6 @@ export const ModalAddEditExperience: React.FC<ModalAddEditProps> = ({
 
 
                 </Grid>
-                {isSubmitting && <LinearProgress />}
                 <br />
                 <Button
                   variant="contained"
@@ -240,7 +240,7 @@ export const ModalAddEditExperience: React.FC<ModalAddEditProps> = ({
                   disabled={isSubmitting}
                   onClick={submitForm}
                 >
-                  Submit
+                  {isSubmitting ? <CircularProgress /> : 'Submit'}
                 </Button>
               </Form>
             )}

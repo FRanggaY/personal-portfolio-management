@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, FormControl, Grid, IconButton, InputAdornment, InputLabel, LinearProgress, OutlinedInput } from "@mui/material";
+import { Button, CircularProgress, FormControl, Grid, IconButton, InputAdornment, InputLabel, OutlinedInput } from "@mui/material";
 import { Formik, Form, Field } from 'formik';
 import { TextField } from 'formik-mui';
 import { useRouter, useParams } from 'next/navigation'
@@ -42,7 +42,7 @@ const LoginForm = () => {
       }}
       validationSchema={CreateLoginSchema}
       onSubmit={async (values, { setSubmitting }) => {
-        setSubmitting(false);
+        setSubmitting(true);
         const message = await login(values);
         if (message === 'SUCCESS') {
           router.push(`/${params.locale}/dashboard`);
@@ -50,6 +50,7 @@ const LoginForm = () => {
         } else {
           toast.error(message)
         }
+        setSubmitting(false);
       }}
     >
       {({ submitForm, isSubmitting, setFieldValue, values, touched, errors }) => (
@@ -95,7 +96,6 @@ const LoginForm = () => {
             </Grid>
 
           </Grid>
-          {isSubmitting && <LinearProgress />}
           <br />
           <Button
             variant="contained"
@@ -104,7 +104,7 @@ const LoginForm = () => {
             disabled={isSubmitting}
             onClick={submitForm}
           >
-            Login
+            {isSubmitting ? <CircularProgress /> : 'Login'}
           </Button>
         </Form>
       )}
