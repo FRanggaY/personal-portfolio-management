@@ -11,6 +11,7 @@ import { useAuthProfile } from "@/context/AuthProfileContext";
 import { AuthProfile } from "@/types/auth";
 import { updateProfile } from "@/actions/auth/auth-action";
 import { AuthProfileSchema } from "@/schemas/auth";
+import siteMetadata from "@/lib/siteMetaData";
 
 const SettingsAuthForm = () => {
   const data: AuthProfile = useAuthProfile();
@@ -135,7 +136,7 @@ const SettingsAuthForm = () => {
               <Typography variant="h6">Picture</Typography>
               {
                 imageUrl ?
-                  <Avatar alt={data.profile.name} src={imageUrl} sx={{ width: 200, height: 200 }} />
+                  <Avatar alt={data.profile.name} src={siteMetadata.apiUrl + '/' + imageUrl} sx={{ width: 200, height: 200 }} />
                   : null
               }
               <ButtonGroup variant="contained" sx={{ marginTop: '10px' }}>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Dialog, Avatar } from '@mui/material';
 import Image from "next/image";
+import siteMetadata from '@/lib/siteMetaData';
 
 // Define type for image data
 interface ImageData {
@@ -37,7 +38,7 @@ export const ImageAvatarPreview: React.FC<{ data: ImageData }> = ({ data }) => {
       <Avatar
         alt={data.name}
         onClick={() => openDialog(data.image_url)}
-        src={data.image_url}
+        src={siteMetadata.apiUrl + '/' + data.image_url}
         sx={{ width: 150, height: 150 }}
       />
 
@@ -52,7 +53,7 @@ export const ImagePreview: React.FC<{ data: ImageData }> = ({ data }) => {
   return (
     <div>
       <Image
-        src={data.image_url}
+        src={siteMetadata.apiUrl + '/' + data.image_url}
         width={500}
         height={500}
         alt={data.name}
@@ -75,7 +76,7 @@ const CustomDialog: React.FC<{ open: boolean; onClose: () => void; imageSrc: str
 }) => {
   return (
     <Dialog open={open} onClose={onClose}>
-      <img src={imageSrc} alt={title} style={{ maxWidth: '100%', height: 'auto' }} />
+      <img src={siteMetadata.apiUrl + '/' + imageSrc} alt={title} style={{ maxWidth: '100%', height: 'auto' }} />
     </Dialog>
   );
 };
