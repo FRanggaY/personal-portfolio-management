@@ -11,6 +11,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Drawer from '@mui/material/Drawer';
 import MenuIcon from '@mui/icons-material/Menu';
 import EditLanguageForm from '@/components/layout/form/language/edit-language-form';
+import siteMetadata from '@/lib/siteMetaData';
 
 const logoStyle = {
   width: '140px',
@@ -74,7 +75,7 @@ function Navbar({ buttonHref, buttonTitle }: NavbarProps) {
               }}
             >
               <img
-                src={
+                src={siteMetadata.apiUrl + '/' + 
                   ''
                 }
                 style={logoStyle}

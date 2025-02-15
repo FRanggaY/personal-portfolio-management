@@ -11,6 +11,7 @@ import { removeAccessToken } from '@/actions/auth/auth-action';
 import { toast } from 'sonner';
 import { useRouter, useParams } from 'next/navigation'
 import { dataLocale, validLocale } from '@/lib/locale';
+import siteMetadata from '@/lib/siteMetaData';
 
 export default function BarNavigation({ authProfileData, title, open, toggleDrawer }: any) {
   const params = useParams<{ locale: string; }>();
@@ -59,7 +60,7 @@ export default function BarNavigation({ authProfileData, title, open, toggleDraw
         <Box sx={{ flexGrow: 0 }}>
           <Tooltip title="Account">
             <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-              <Avatar alt={authProfileData?.profile.name} src={authProfileData?.profile.image_url} />
+              <Avatar alt={authProfileData?.profile.name} src={siteMetadata.apiUrl + '/' + authProfileData?.profile.image_url} />
             </IconButton>
           </Tooltip>
           <Menu
@@ -82,7 +83,7 @@ export default function BarNavigation({ authProfileData, title, open, toggleDraw
               <Grid container spacing={2} alignItems={'center'}>
                 <Grid item>
                   <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                    <Avatar alt={authProfileData?.profile.name} src={authProfileData?.profile?.image_url} />
+                    <Avatar alt={authProfileData?.profile.name} src={siteMetadata.apiUrl + '/' + authProfileData?.profile?.image_url} />
                   </IconButton>
                 </Grid>
                 <Grid item>

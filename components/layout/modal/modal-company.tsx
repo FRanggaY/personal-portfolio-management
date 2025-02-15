@@ -7,6 +7,7 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { VisuallyHiddenInput } from '@/components/shared/button/button';
 import Image from "next/image";
 import { ImageAvatarPreview } from "@/components/shared/dialog/image-preview";
+import siteMetadata from "@/lib/siteMetaData";
 
 interface ModalAddEditProps {
   openAddEdit: boolean;
@@ -200,7 +201,7 @@ export const ModalAddEditCompany: React.FC<ModalAddEditProps> = ({
                     {
                       imageUrl ?
                         <Image
-                          src={imageUrl}
+                          src={siteMetadata.apiUrl + '/' + imageUrl}
                           width={500}
                           height={500}
                           alt={values.name}
@@ -228,7 +229,7 @@ export const ModalAddEditCompany: React.FC<ModalAddEditProps> = ({
                     {
                       logoUrl ?
                         <Image
-                          src={logoUrl}
+                          src={siteMetadata.apiUrl + '/' + logoUrl}
                           width={500}
                           height={500}
                           alt={values.name}

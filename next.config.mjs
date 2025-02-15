@@ -8,7 +8,7 @@ const nextConfig = {
                 port: '8000',
             },
             {
-                protocol: 'http',
+                protocol: 'https',
                 hostname: 'personalportfolioapi.franciscusrangga.com'
             },
         ],
